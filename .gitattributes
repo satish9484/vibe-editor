@@ -1,0 +1,3 @@
+# Handle line endings automatically for files detected as text
+# and enforce LF (Unix-style) line endings in the repository.
+* text=auto eol=lf
