@@ -4,8 +4,10 @@ import Image from 'next/image';
 const Page = () => {
   return (
     <>
-      <Image src={'/login.svg'} alt='Login-Image' height={300} width={300} className='m-6 object-cover' />
-      <SignInFormClient />
+      <div className='flex flex-col md:flex-row items-center justify-center min-h-screen'>
+        <Image src={'/login.svg'} alt='Login-Image' height={300} width={300} className='m-6 hidden object-cover md:block' />
+        <SignInFormClient />
+      </div>
     </>
   );
 };

@@ -1,8 +1,7 @@
-import React from 'react';
+import { signIn } from '@/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Chrome, Github } from 'lucide-react';
-import { signIn } from '@/auth';
 
 async function handleGoogleSignIn() {
   'use server';
