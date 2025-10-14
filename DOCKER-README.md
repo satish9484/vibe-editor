@@ -1,5 +1,8 @@
 # 🐳 Docker Deployment Guide for VibeCode Editor
 
+> **For general project information, setup instructions, and features, see the
+> main [README.md](README.md)**
+
 This guide will help you deploy VibeCode Editor using Docker with all services
 containerized.
 
@@ -14,7 +17,7 @@ containerized.
 ### 1. Clone and Setup
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/satish9484/vibe-editor.git
 cd vibe-editor
 ```
 
@@ -22,7 +25,7 @@ cd vibe-editor
 
 ```bash
 # Copy environment template
-cp env.example .env
+cp .env.example .env
 
 # Edit .env file with your actual values
 nano .env
