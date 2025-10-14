@@ -120,7 +120,7 @@ const requestBody = {
 
 ```env
 # Database Configuration (MongoDB Atlas)
-DATABASE_URL="mongodb+srv://username:password@cluster.mongodb.net/vibe-editor?retryWrites=true&w=majority"
+DATABASE_URL="mongodb+srv://<username>:<password>@cluster.mongodb.net/<databasename>?retryWrites=true&w=majority"
 
 # Authentication Configuration
 AUTH_SECRET="your-super-secret-auth-key-here"
