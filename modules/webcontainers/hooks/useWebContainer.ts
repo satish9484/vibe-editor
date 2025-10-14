@@ -25,11 +25,18 @@ export const useWebContainer = ({ templateData }: UseWebContainerProps): UseWebC
 
     async function initializeWebContainer() {
       try {
+        console.log('🚀 Starting WebContainer initialization...');
+
         // Dynamically import WebContainer only on client side
         if (typeof window === 'undefined') return;
 
+        console.log('📦 Loading WebContainer API...');
         const { WebContainer } = await import('@webcontainer/api');
+
+        console.log('🔧 Booting WebContainer...');
         const webcontainerInstance = await WebContainer.boot();
+
+        console.log('✅ WebContainer initialized successfully');
 
         if (!mounted) return;
 

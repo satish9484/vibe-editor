@@ -1,0 +1,8 @@
+// test-api.json
+{
+  "fileContent": "function calculateSum(a, b) {\n  return a + b;\n}\n\nfunction calculateProduct(a, b) {\n  return a * b;\n}\n\n// TODO: Add division function",
+  "cursorLine": 6,
+  "cursorColumn": 0,
+  "suggestionType": "function",
+  "fileName": "math.js"
+}

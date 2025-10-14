@@ -269,11 +269,16 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
     if (!terminalRef.current || term.current || typeof window === 'undefined') return;
 
     try {
+      console.log('🚀 Starting terminal initialization...');
+
       // Dynamically import xterm libraries only on client side
+      console.log('📦 Loading xterm libraries...');
       const { Terminal } = await import('xterm');
       const { FitAddon } = await import('xterm-addon-fit');
       const { WebLinksAddon } = await import('xterm-addon-web-links');
       const { SearchAddon } = await import('xterm-addon-search');
+
+      console.log('✅ xterm libraries loaded successfully');
 
       const terminal = new Terminal({
         cursorBlink: true,
@@ -297,6 +302,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
       terminal.loadAddon(webLinksAddon);
       terminal.loadAddon(searchAddonInstance);
 
+      console.log('🔧 Creating terminal instance...');
       terminal.open(terminalRef.current);
 
       fitAddon.current = fitAddonInstance;
@@ -316,6 +322,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
       terminal.writeln("Type 'help' for available commands");
       writePrompt();
 
+      console.log('✅ Terminal initialized successfully');
       setIsLoaded(true);
       return terminal;
     } catch (error) {
@@ -391,6 +398,16 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
   useEffect(() => {
     if (typeof window !== 'undefined') {
       initializeTerminal();
+
+      // Add timeout to prevent infinite loading
+      const timeout = setTimeout(() => {
+        if (!isLoaded) {
+          console.error('❌ Terminal initialization timeout after 10 seconds');
+          setIsLoaded(false);
+        }
+      }, 10000); // 10 second timeout
+
+      return () => clearTimeout(timeout);
     }
 
     // Handle resize
@@ -419,7 +436,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
         term.current = null;
       }
     };
-  }, [initializeTerminal]);
+  }, [initializeTerminal, isLoaded]);
 
   useEffect(() => {
     if (webContainerInstance && term.current && !isConnected) {
@@ -436,6 +453,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
             <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2'></div>
             <p className='text-sm text-muted-foreground'>Loading Terminal...</p>
             <p className='text-xs text-muted-foreground mt-1'>Initializing xterm.js</p>
+            <p className='text-xs text-muted-foreground mt-2'>Check browser console for details</p>
           </div>
         </div>
       </div>

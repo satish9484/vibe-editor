@@ -1,132 +1,54 @@
-# 🧠 Vibecode Editor – AI-Powered Web IDE
+## Running This Project with Docker
 
-![Vibecode Editor Thumbnail](public/vibe-code-editor-thumbnaail.svg)
+This project is fully containerized and can be run using Docker Compose. Below are the specific requirements and instructions for running all services.
 
-**Vibecode Editor** is a blazing-fast, AI-integrated web IDE built entirely in
-the browser using **Next.js App Router**, **WebContainers**, **Monaco Editor**,
-and **local LLMs via Ollama**. It offers real-time code execution, an AI-powered
-chat assistant, and support for multiple tech stacks — all wrapped in a stunning
-developer-first UI.
+### Project-Specific Requirements
+- **Node.js Version:** All Node-based services require Node.js `22.13.1` (as set by `ARG NODE_VERSION=22.13.1` in Dockerfiles).
+- **Bun Version:** The Hono starter uses Bun `1.2` (`ARG BUN_VERSION=1.2`).
+- **Angular CLI:** The Angular starter installs `@angular/cli` globally for builds.
+- **Prisma:** The main app generates Prisma client during build.
+- **Non-root Users:** All containers run as non-root users for security.
 
----
+### Environment Variables
+- The main app and starters support environment files (`.env`, `.env.example`).
+- To use custom environment variables, uncomment the `env_file` lines in `docker-compose.yml` for each service and provide the appropriate `.env` file.
+- **MongoDB:** If enabling local MongoDB, set `MONGO_ROOT_USERNAME`, `MONGO_ROOT_PASSWORD`, and `MONGO_DATABASE` in your environment.
 
-## 🚀 Features
+### Build and Run Instructions
+1. **Build and Start All Services:**
+   ```sh
+   docker compose up --build
+   ```
+   This will build and start all services defined in `docker-compose.yml`.
 
-- 🔐 **OAuth Login with NextAuth** – Supports Google & GitHub login.
-- 🎨 **Modern UI** – Built with TailwindCSS & ShadCN UI.
-- 🌗 **Dark/Light Mode** – Seamlessly toggle between themes.
-- 🧱 **Project Templates** – Choose from React, Next.js, Express, Hono, Vue, or
-  Angular.
-- 🗂️ **Custom File Explorer** – Create, rename, delete, and manage files/folders
-  easily.
-- 🖊️ **Enhanced Monaco Editor** – Syntax highlighting, formatting, keybindings,
-  and AI autocomplete.
-- 💡 **AI Suggestions with Ollama** – Local models give you code completion on
-  `Ctrl + Space` or double `Enter`. Accept with `Tab`.
-- ⚙️ **WebContainers Integration** – Instantly run frontend/backend apps right
-  in the browser.
-- 💻 **Terminal with xterm.js** – Fully interactive embedded terminal
-  experience.
-- 🤖 **AI Chat Assistant** – Share files with the AI and get help, refactors, or
-  explanations.
+2. **Optional: Enable Local MongoDB**
+   - Uncomment the `mongodb` service in `docker-compose.yml` and the corresponding volume.
+   - Provide required MongoDB environment variables.
+   - By default, the project expects MongoDB Atlas; local MongoDB is optional.
 
----
+### Exposed Ports Per Service
+| Service                        | Port Mapping      | Description                |
+|------------------------------- |------------------ |--------------------------- |
+| typescript-root                | 3000:3000         | Main Next.js app           |
+| typescript-angular             | 4200:4200         | Angular starter            |
+| javascript-express-simple      | 3001:3000         | Express starter            |
+| typescript-hono-nodejs-starter | 3002:3000         | Hono starter (Bun)         |
+| typescript-nextjs-new          | 3003:3000         | Next.js starter            |
+| typescript-react-ts            | 4173:4173         | React (Vite) starter       |
+| javascript-vue                 | 4174:4173         | Vue (Vite) starter         |
+| ollama                         | 11434:11434       | Ollama AI service          |
+| mongodb (optional)             | 27017:27017       | MongoDB (if enabled)       |
 
-## 🧱 Tech Stack
+### Special Configuration
+- **Ollama AI Service:** Runs on port `11434` and persists data in the `ollama_data` volume.
+- **MongoDB:** Not enabled by default; recommended to use MongoDB Atlas. Local MongoDB can be enabled as described above.
+- **Volumes:** Persistent data for Ollama (and optionally MongoDB) is managed via Docker volumes.
+- **Networks:** All services are connected via the `vibe-network` bridge network for internal communication.
 
-| Layer         | Technology                               |
-| ------------- | ---------------------------------------- |
-| Framework     | Next.js 15 (App Router)                  |
-| Styling       | TailwindCSS, ShadCN UI                   |
-| Language      | TypeScript                               |
-| Auth          | NextAuth (Google + GitHub OAuth)         |
-| Editor        | Monaco Editor                            |
-| AI Suggestion | Ollama (LLMs running locally via Docker) |
-| Runtime       | WebContainers                            |
-| Terminal      | xterm.js                                 |
-| Database      | MongoDB (via DATABASE_URL)               |
-
----
-
-## 🛠️ Getting Started
-
-### 1. Clone the Repo
-
-```bash
-git clone https://github.com/your-username/vibecode-editor.git
-cd vibecode-editor
-```
-
-### 2. Install Dependencies
-
-```bash
-npm install
-```
-
-### 3. Set Up Environment Variables
-
-Create a `.env.local` file using the template:
-
-```bash
-cp .env.example .env.local
-```
-
-Then, fill in your credentials:
-
-```env
-AUTH_SECRET=your_auth_secret
-AUTH_GOOGLE_ID=your_google_client_id
-AUTH_GOOGLE_SECRET=your_google_secret
-AUTH_GITHUB_ID=your_github_client_id
-AUTH_GITHUB_SECRET=your_github_secret
-DATABASE_URL=your_mongodb_connection_string
-NEXTAUTH_URL=http://localhost:3000
-```
-
-### 4. Start Local Ollama Model
-
-Make sure [Ollama](https://ollama.com/) and Docker are installed, then run:
-
-```bash
-ollama run codellama
-```
-
-Or use your preferred model that supports code generation.
-
-### 5. Run the Development Server
-
-```bash
-npm run dev
-```
-
-Visit `http://localhost:3000` in your browser.
+### Notes
+- All Dockerfiles use multi-stage builds for optimized images.
+- If you add or modify environment variables, ensure your `.env` files are up to date and referenced in `docker-compose.yml`.
+- For development, you may want to mount source directories or use bind mounts; this setup is optimized for production builds.
 
 ---
-
-## 🎯 Keyboard Shortcuts
-
-- `Ctrl + Space` or `Double Enter`: Trigger AI suggestions
-- `Tab`: Accept AI suggestion
-- `/`: Open Command Palette (if implemented)
-
----
-
----
-
-## 📄 License
-
-This project is licensed under the [MIT License](LICENSE).
-
----
-
-## 🙏 Acknowledgements
-
-- [Monaco Editor](https://microsoft.github.io/monaco-editor/)
-- [Ollama](https://ollama.com/) – for offline LLMs
-- [WebContainers](https://webcontainers.io/)
-- [xterm.js](https://xtermjs.org/)
-- [NextAuth.js](https://next-auth.js.org/)
-
-```
-
-```
+*This section was updated to reflect the current Docker setup and service configuration for this project.*

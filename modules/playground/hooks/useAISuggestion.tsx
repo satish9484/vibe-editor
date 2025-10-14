@@ -1,5 +1,4 @@
-import { isLastDayOfMonth } from 'date-fns';
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 interface AISuggestionsState {
   suggestion: string | null;
@@ -57,6 +56,8 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
             cursorColumn: cursorPosition.column - 1,
             suggestionType: type,
           };
+
+          console.log('payload', payload);
 
           const response = await fetch('/api/code-completion', {
             method: 'POST',

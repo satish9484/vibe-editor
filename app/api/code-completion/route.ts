@@ -25,6 +25,8 @@ export async function POST(request: NextRequest) {
   try {
     const body: CodeSuggestionRequest = await request.json();
 
+    console.log('body', body);
+
     const { fileContent, cursorLine, cursorColumn, suggestionType, fileName } = body;
 
     // Validate input
@@ -118,22 +120,39 @@ Generate suggestion:`;
 
 async function generateSuggestion(prompt: string): Promise<string> {
   try {
-    const response = await fetch('http://localhost:11434/api/generate', {
+    const ollamaUrl = process.env.OLLAMA_HOST || 'http://ollama:11434';
+    const requestBody = {
+      // Current working model (lightweight, ~637MB)
+      model: 'tinyllama',
+
+      // Alternative models (uncomment to use):
+      // model: 'codellama:latest',     // Full CodeLlama (3.8GB) - requires 6GB+ RAM
+      // model: 'codellama:7b',         // CodeLlama 7B (3.8GB) - requires 6GB+ RAM
+      // model: 'codellama:13b',       // CodeLlama 13B (7.3GB) - requires 8GB+ RAM
+      // model: 'codellama:34b',       // CodeLlama 34B (19GB) - requires 20GB+ RAM
+
+      prompt,
+      stream: false,
+      option: {
+        temperature: 0.7,
+        max_tokens: 300,
+      },
+    };
+
+    console.log('Ollama request:', JSON.stringify(requestBody, null, 2));
+
+    const response = await fetch(`${ollamaUrl}/api/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'codellama:latest',
-        prompt,
-        stream: false,
-        option: {
-          temperature: 0.7,
-          max_tokens: 300,
-        },
-      }),
+      body: JSON.stringify(requestBody),
     });
 
+    console.log('Ollama response:', response);
+
     if (!response.ok) {
-      throw new Error(`AI service error: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('Ollama error response:', errorText);
+      throw new Error(`AI service error: ${response.statusText} - ${errorText}`);
     }
 
     const data = await response.json();
