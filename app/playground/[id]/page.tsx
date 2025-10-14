@@ -17,7 +17,7 @@ import { findFilePath } from '@/modules/playground/lib';
 import { TemplateFile, TemplateFolder } from '@/modules/playground/lib/path-to-json';
 import WebContainerPreview from '@/modules/webcontainers/components/webcontainer-preview';
 import { useWebContainer } from '@/modules/webcontainers/hooks/useWebContainer';
-import { AlertCircle, FileText, FolderOpen, Save, Settings, X } from 'lucide-react';
+import { AlertCircle, FileText, FolderOpen, RefreshCw, Save, Settings, X } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -56,6 +56,9 @@ const MainPlaygroundPage = () => {
     error: containerError,
     instance,
     writeFileSync,
+    retryCount,
+    isRetrying,
+    retryInitialization,
     // @ts-ignore
   } = useWebContainer({ templateData });
 
@@ -205,6 +208,21 @@ const MainPlaygroundPage = () => {
     }
   };
 
+  const handleResetEnvironment = useCallback(async () => {
+    try {
+      if (retryInitialization) {
+        toast.info('Resetting WebContainer environment...');
+        retryInitialization();
+        toast.success('Environment reset successfully');
+      } else {
+        toast.error('Reset function not available');
+      }
+    } catch (error) {
+      console.error('Error resetting environment:', error);
+      toast.error('Failed to reset environment');
+    }
+  }, [retryInitialization]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key === 's') {
@@ -308,6 +326,15 @@ const MainPlaygroundPage = () => {
 
                 <ToggleAI isEnabled={aiSuggestions.isEnabled} onToggle={aiSuggestions.toggleEnabled} suggestionLoading={aiSuggestions.isLoading} />
 
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button size='sm' variant='outline' onClick={handleResetEnvironment} disabled={!retryInitialization}>
+                      <RefreshCw className='h-4 w-4' />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Reset Environment</TooltipContent>
+                </Tooltip>
+
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button size='sm' variant='outline'>
@@ -395,6 +422,9 @@ const MainPlaygroundPage = () => {
                             error={containerError}
                             serverUrl={serverUrl!}
                             forceResetup={false}
+                            retryCount={retryCount}
+                            isRetrying={isRetrying}
+                            retryInitialization={retryInitialization}
                           />
                         </ResizablePanel>
                       </>

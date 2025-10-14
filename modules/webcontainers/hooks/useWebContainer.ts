@@ -12,6 +12,9 @@ interface UseWebContaierReturn {
   instance: any;
   writeFileSync: (path: string, content: string) => Promise<void>;
   destory: () => void;
+  retryCount: number;
+  isRetrying: boolean;
+  retryInitialization: () => void;
 }
 
 export const useWebContainer = ({ templateData }: UseWebContainerProps): UseWebContaierReturn => {
@@ -19,66 +22,160 @@ export const useWebContainer = ({ templateData }: UseWebContainerProps): UseWebC
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [instance, setInstance] = useState<any>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   useEffect(() => {
     let mounted = true;
 
     async function initializeWebContainer() {
+      console.group('🚀 WebContainer Initialization Flow');
+      console.log('1️⃣ Initialization Check:', {
+        isRetrying: retryCount > 0,
+        retryAttempt: retryCount + 1,
+        isClientSide: typeof window !== 'undefined',
+        mounted: mounted,
+      });
+
       try {
-        console.log('🚀 Starting WebContainer initialization...');
+        setIsRetrying(retryCount > 0);
+        console.log('2️⃣ ✅ PROCEEDING: Starting WebContainer initialization');
 
         // Dynamically import WebContainer only on client side
-        if (typeof window === 'undefined') return;
+        if (typeof window === 'undefined') {
+          console.log('2️⃣ ❌ BLOCKED: Not client-side, skipping initialization');
+          console.groupEnd();
+          return;
+        }
 
-        console.log('📦 Loading WebContainer API...');
+        console.log('3️⃣ 📦 Loading WebContainer API...');
         const { WebContainer } = await import('@webcontainer/api');
+        console.log('3️⃣ ✅ SUCCESS: WebContainer API loaded');
 
-        console.log('🔧 Booting WebContainer...');
+        console.log('4️⃣ 🔧 Booting WebContainer...');
         const webcontainerInstance = await WebContainer.boot();
+        console.log('4️⃣ ✅ SUCCESS: WebContainer booted successfully');
 
-        console.log('✅ WebContainer initialized successfully');
+        console.log('5️⃣ 🔍 Checking mount status:', {
+          mounted: mounted,
+          hasInstance: !!webcontainerInstance,
+        });
 
-        if (!mounted) return;
+        if (!mounted) {
+          console.log('5️⃣ ❌ BLOCKED: Component unmounted during initialization');
+          console.groupEnd();
+          return;
+        }
 
+        console.log('6️⃣ ✅ PROCEEDING: Setting WebContainer instance');
         setInstance(webcontainerInstance);
         setIsLoading(false);
+        setError(null);
+        setRetryCount(0);
+        setIsRetrying(false);
+        console.log('7️⃣ ✅ SUCCESS: WebContainer initialization completed', {
+          retryCount: 0,
+          isLoading: false,
+          error: null,
+          isRetrying: false,
+        });
+        console.groupEnd();
       } catch (error) {
-        console.error('Failed to initialize WebContainer:', error);
+        console.error('❌ ERROR: Failed to initialize WebContainer:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Failed to initialize WebContainer';
+        console.log('8️⃣ ❌ FAILED: WebContainer initialization error', {
+          errorMessage: errorMessage,
+          retryCount: retryCount,
+          maxRetries: 3,
+        });
+
         if (mounted) {
-          setError(error instanceof Error ? error.message : 'Failed to initialize WebContainer');
+          setError(errorMessage);
           setIsLoading(false);
+          setIsRetrying(false);
+
+          // Auto-retry up to 3 times with exponential backoff
+          if (retryCount < 3) {
+            const delay = Math.pow(2, retryCount) * 2000; // 2s, 4s, 8s
+            console.log(`9️⃣ 🔄 RETRY: Retrying WebContainer initialization in ${delay}ms... (attempt ${retryCount + 1}/3)`);
+            setTimeout(() => {
+              if (mounted) {
+                setRetryCount(prev => prev + 1);
+              }
+            }, delay);
+          } else {
+            console.log('9️⃣ ❌ FAILED: Maximum retry attempts reached');
+          }
+        } else {
+          console.log('8️⃣ ℹ️ Component unmounted, skipping error handling');
         }
+        console.groupEnd();
       }
     }
 
     initializeWebContainer();
 
     return () => {
+      console.log('🧹 CLEANUP: WebContainer useEffect cleanup');
       mounted = false;
       if (instance) {
+        console.log('🧹 CLEANUP: Tearing down WebContainer instance');
         instance.teardown();
       }
     };
-  }, []);
+  }, [retryCount]);
 
   const writeFileSync = useCallback(
     async (path: string, content: string): Promise<void> => {
+      console.group('📝 WebContainer File Write Flow');
+      console.log('1️⃣ Write Request:', {
+        filePath: path,
+        contentLength: content.length,
+        hasInstance: !!instance,
+      });
+
       if (!instance) {
+        console.log('1️⃣ ❌ BLOCKED: WebContainer instance is not available');
+        console.groupEnd();
         throw new Error('WebContainer instance is not available');
       }
 
       try {
+        console.log('2️⃣ 🔍 Parsing file path:', {
+          path: path,
+          pathParts: path.split('/'),
+        });
+
         const pathParts = path.split('/');
         const folderPath = pathParts.slice(0, -1).join('/');
 
         if (folderPath) {
+          console.log('3️⃣ 📁 Creating directory structure:', {
+            folderPath: folderPath,
+            recursive: true,
+          });
           await instance.fs.mkdir(folderPath, { recursive: true }); // Create folder structure recursively
+          console.log('3️⃣ ✅ SUCCESS: Directory structure created');
+        } else {
+          console.log('3️⃣ ℹ️ No directory structure needed (root file)');
         }
 
+        console.log('4️⃣ 📝 Writing file content:', {
+          filePath: path,
+          contentLength: content.length,
+          contentPreview: content.substring(0, 100) + (content.length > 100 ? '...' : ''),
+        });
         await instance.fs.writeFile(path, content);
+        console.log('5️⃣ ✅ SUCCESS: File written successfully');
+        console.groupEnd();
       } catch (err) {
+        console.error('❌ ERROR: Failed to write file:', err);
         const errorMessage = err instanceof Error ? err.message : 'Failed to write file';
-        console.error(`Failed to write file at ${path}:`, err);
+        console.log('5️⃣ ❌ FAILED: File write error', {
+          errorMessage: errorMessage,
+          filePath: path,
+        });
+        console.groupEnd();
         throw new Error(`Failed to write file at ${path}: ${errorMessage}`);
       }
     },
@@ -86,12 +183,60 @@ export const useWebContainer = ({ templateData }: UseWebContainerProps): UseWebC
   );
 
   const destory = useCallback(() => {
+    console.group('🗑️ WebContainer Destroy Flow');
+    console.log('1️⃣ Destroy Request:', {
+      hasInstance: !!instance,
+      hasServerUrl: !!serverUrl,
+    });
+
     if (instance) {
+      console.log('2️⃣ 🧹 CLEANUP: Tearing down WebContainer instance');
       instance.teardown();
       setInstance(null);
       setServerUrl(null);
+      console.log('3️⃣ ✅ SUCCESS: WebContainer destroyed successfully');
+    } else {
+      console.log('2️⃣ ℹ️ No instance to destroy');
     }
-  }, [instance]);
+    console.groupEnd();
+  }, [instance, serverUrl]);
 
-  return { serverUrl, isLoading, error, instance, writeFileSync, destory };
+  const retryInitialization = useCallback(() => {
+    console.group('🔄 WebContainer Manual Retry Flow');
+    console.log('1️⃣ Manual Retry Request:', {
+      hasInstance: !!instance,
+      currentRetryCount: retryCount,
+      currentError: error,
+    });
+
+    console.log('2️⃣ 🧹 CLEANUP: Resetting state and cleaning up');
+    setRetryCount(0);
+    setError(null);
+    setIsLoading(true);
+    setIsRetrying(false);
+
+    // Clean up existing instance
+    if (instance) {
+      console.log('3️⃣ 🗑️ Destroying existing instance');
+      instance.teardown();
+      setInstance(null);
+    } else {
+      console.log('3️⃣ ℹ️ No existing instance to destroy');
+    }
+    setServerUrl(null);
+    console.log('4️⃣ ✅ SUCCESS: Manual retry initiated');
+    console.groupEnd();
+  }, [instance, retryCount, error]);
+
+  return {
+    serverUrl,
+    isLoading,
+    error,
+    instance,
+    writeFileSync,
+    destory,
+    retryCount,
+    isRetrying,
+    retryInitialization,
+  };
 };

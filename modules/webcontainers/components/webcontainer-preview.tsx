@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle, Loader2, XCircle } from 'lucide-react';
@@ -16,6 +16,9 @@ interface WebContainerPreviewProps {
   instance: any;
   writeFileSync: (path: string, content: string) => Promise<void>;
   forceResetup?: boolean; // Optional prop to force re-setup
+  retryCount?: number;
+  isRetrying?: boolean;
+  retryInitialization?: () => void;
 }
 const WebContainerPreview = ({
   templateData,
@@ -25,6 +28,9 @@ const WebContainerPreview = ({
   serverUrl,
   writeFileSync,
   forceResetup = false,
+  retryCount = 0,
+  isRetrying = false,
+  retryInitialization,
 }: WebContainerPreviewProps) => {
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [loadingState, setLoadingState] = useState({
@@ -41,6 +47,80 @@ const WebContainerPreview = ({
   const [isSetupInProgress, setIsSetupInProgress] = useState(false);
 
   const terminalRef = useRef<any>(null);
+
+  // Function to detect and get appropriate start command
+  const getStartCommand = useCallback(async (instance: any) => {
+    console.group('🔍 Start Command Detection Flow');
+    console.log('1️⃣ Detection Started:', {
+      hasInstance: !!instance,
+    });
+
+    try {
+      console.log('2️⃣ 📄 Reading package.json...');
+      // Try to read package.json to determine the correct start command
+      const packageJsonContent = await instance.fs.readFile('package.json', 'utf8');
+      const packageJson = JSON.parse(packageJsonContent);
+      console.log('2️⃣ ✅ package.json loaded successfully');
+
+      console.log('3️⃣ 🔍 Analyzing package.json:', {
+        hasScripts: !!packageJson.scripts,
+        scripts: packageJson.scripts,
+        dependencies: Object.keys(packageJson.dependencies || {}),
+      });
+
+      // Check for different start scripts
+      if (packageJson.scripts) {
+        if (packageJson.scripts.start) {
+          console.log('3️⃣ ✅ Found start script:', { command: 'npm', args: ['run', 'start'] });
+          console.groupEnd();
+          return { command: 'npm', args: ['run', 'start'] };
+        }
+        if (packageJson.scripts.dev) {
+          console.log('3️⃣ ✅ Found dev script:', { command: 'npm', args: ['run', 'dev'] });
+          console.groupEnd();
+          return { command: 'npm', args: ['run', 'dev'] };
+        }
+        if (packageJson.scripts.serve) {
+          console.log('3️⃣ ✅ Found serve script:', { command: 'npm', args: ['run', 'serve'] });
+          console.groupEnd();
+          return { command: 'npm', args: ['run', 'serve'] };
+        }
+      }
+
+      console.log('4️⃣ 🔍 Checking framework dependencies...');
+      // Fallback commands based on common frameworks
+      if (packageJson.dependencies?.next) {
+        console.log('4️⃣ ✅ Detected Next.js framework:', { command: 'npm', args: ['run', 'dev'] });
+        console.groupEnd();
+        return { command: 'npm', args: ['run', 'dev'] };
+      }
+      if (packageJson.dependencies?.react) {
+        console.log('4️⃣ ✅ Detected React framework:', { command: 'npm', args: ['start'] });
+        console.groupEnd();
+        return { command: 'npm', args: ['start'] };
+      }
+      if (packageJson.dependencies?.vue) {
+        console.log('4️⃣ ✅ Detected Vue framework:', { command: 'npm', args: ['run', 'dev'] });
+        console.groupEnd();
+        return { command: 'npm', args: ['run', 'dev'] };
+      }
+      if (packageJson.dependencies?.express) {
+        console.log('4️⃣ ✅ Detected Express framework:', { command: 'node', args: ['src/index.js'] });
+        console.groupEnd();
+        return { command: 'node', args: ['src/index.js'] };
+      }
+
+      console.log('5️⃣ 📋 Using default fallback command:', { command: 'npm', args: ['start'] });
+      // Default fallback
+      console.groupEnd();
+      return { command: 'npm', args: ['start'] };
+    } catch (error) {
+      console.error('❌ ERROR: Could not read package.json:', error);
+      console.log('5️⃣ ⚠️ Using default fallback due to error:', { command: 'npm', args: ['start'] });
+      console.groupEnd();
+      return { command: 'npm', args: ['start'] };
+    }
+  }, []);
 
   // Reset setup state when forceResetup changes
   useEffect(() => {
@@ -61,22 +141,40 @@ const WebContainerPreview = ({
 
   useEffect(() => {
     async function setupContainer() {
-      if (!instance || isSetupComplete || isSetupInProgress) return;
+      console.group('🏗️ WebContainer Setup Flow');
+      console.log('1️⃣ Setup Check:', {
+        hasInstance: !!instance,
+        isSetupComplete: isSetupComplete,
+        isSetupInProgress: isSetupInProgress,
+        hasTemplateData: !!templateData,
+      });
+
+      if (!instance || isSetupComplete || isSetupInProgress) {
+        console.log('1️⃣ ❌ BLOCKED: Cannot setup container', {
+          reason: !instance ? 'No instance' : isSetupComplete ? 'Already complete' : 'In progress',
+        });
+        console.groupEnd();
+        return;
+      }
 
       try {
+        console.log('2️⃣ ✅ PROCEEDING: Starting container setup');
         setIsSetupInProgress(true);
         setSetupError(null);
 
         try {
+          console.log('3️⃣ 🔍 Checking for existing package.json...');
           const packageJsonExists = await instance.fs.readFile('package.json', 'utf8');
 
           if (packageJsonExists) {
+            console.log('3️⃣ ✅ Found existing package.json - reconnecting to server');
             // Files are already mounted, just reconnect to existing server
             if (terminalRef.current?.writeToTerminal) {
               terminalRef.current.writeToTerminal('🔄 Reconnecting to existing WebContainer session...\r\n');
             }
 
             instance.on('server-ready', (port: number, url: string) => {
+              console.log('4️⃣ 🌐 Server reconnected:', { port, url });
               if (terminalRef.current?.writeToTerminal) {
                 terminalRef.current.writeToTerminal(`🌐 Reconnected to server at ${url}\r\n`);
               }
@@ -91,11 +189,16 @@ const WebContainerPreview = ({
 
             setCurrentStep(4);
             setLoadingState(prev => ({ ...prev, starting: true }));
+            console.log('5️⃣ ✅ SUCCESS: Reconnected to existing server');
+            console.groupEnd();
             return;
           }
-        } catch (error) {}
+        } catch (error) {
+          console.log('3️⃣ ℹ️ No existing package.json found, proceeding with full setup');
+        }
 
         // Step-1 transform data
+        console.log('4️⃣ 🔄 Step 1: Transforming template data');
         setLoadingState(prev => ({ ...prev, transforming: true }));
         setCurrentStep(1);
         // Write to terminal
@@ -105,6 +208,10 @@ const WebContainerPreview = ({
 
         // @ts-ignore
         const files = transformToWebContainerFormat(templateData);
+        console.log('4️⃣ ✅ Template data transformed:', {
+          fileCount: Object.keys(files).length,
+          fileStructure: Object.keys(files),
+        });
         setLoadingState(prev => ({
           ...prev,
           transforming: false,
@@ -113,7 +220,7 @@ const WebContainerPreview = ({
         setCurrentStep(2);
 
         //  Step-2 Mount Files
-
+        console.log('5️⃣ 📁 Step 2: Mounting files to WebContainer');
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal('📁 Mounting files to WebContainer...\r\n');
         }
@@ -122,6 +229,7 @@ const WebContainerPreview = ({
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal('✅ Files mounted successfully\r\n');
         }
+        console.log('5️⃣ ✅ Files mounted successfully');
         setLoadingState(prev => ({
           ...prev,
           mounting: false,
@@ -129,32 +237,48 @@ const WebContainerPreview = ({
         }));
         setCurrentStep(3);
 
-        // Step-3 Install dependencies
-
+        // Step-3 Install dependencies (skip if node_modules already present)
+        console.log('6️⃣ 📦 Step 3: Installing dependencies');
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal('📦 Installing dependencies...\r\n');
         }
 
-        const installProcess = await instance.spawn('npm', ['install']);
+        let didInstall = false;
+        try {
+          // Check if node_modules exists inside the WebContainer FS
+          await instance.fs.readdir('node_modules');
+          console.log('6️⃣ ⚡ node_modules detected - skipping install');
+          if (terminalRef.current?.writeToTerminal) {
+            terminalRef.current.writeToTerminal('⚡ Skipping install (node_modules already present)\r\n');
+          }
+        } catch {
+          // node_modules not present -> run install
+          const installProcess = await instance.spawn('npm', ['install']);
+          console.log('6️⃣ 🚀 npm install process spawned');
 
-        installProcess.output.pipeTo(
-          new WritableStream({
-            write(data) {
-              if (terminalRef.current?.writeToTerminal) {
-                terminalRef.current.writeToTerminal(data);
-              }
-            },
-          })
-        );
+          installProcess.output.pipeTo(
+            new WritableStream({
+              write(data) {
+                if (terminalRef.current?.writeToTerminal) {
+                  terminalRef.current.writeToTerminal(data);
+                }
+              },
+            })
+          );
 
-        const installExitCode = await installProcess.exit;
+          console.log('7️⃣ ⏳ Waiting for npm install to complete...');
+          const installExitCode = await installProcess.exit;
 
-        if (installExitCode !== 0) {
-          throw new Error(`Failed to install dependencies. Exit code: ${installExitCode}`);
-        }
+          if (installExitCode !== 0) {
+            console.log('7️⃣ ❌ FAILED: npm install failed', { exitCode: installExitCode });
+            throw new Error(`Failed to install dependencies. Exit code: ${installExitCode}`);
+          }
 
-        if (terminalRef.current?.writeToTerminal) {
-          terminalRef.current.writeToTerminal('✅ Dependencies installed successfully\r\n');
+          didInstall = true;
+          if (terminalRef.current?.writeToTerminal) {
+            terminalRef.current.writeToTerminal('✅ Dependencies installed successfully\r\n');
+          }
+          console.log('7️⃣ ✅ Dependencies installed successfully');
         }
 
         setLoadingState(prev => ({
@@ -165,14 +289,27 @@ const WebContainerPreview = ({
         setCurrentStep(4);
 
         // STEP-4 Start The Server
-
+        console.log('8️⃣ 🚀 Step 4: Starting development server');
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal('🚀 Starting development server...\r\n');
         }
 
-        const startProcess = await instance.spawn('npm', ['run', 'start']);
+        // Get the appropriate start command based on package.json
+        const startCommand = await getStartCommand(instance);
+        console.log('8️⃣ 📋 Detected start command:', {
+          command: startCommand.command,
+          args: startCommand.args,
+        });
+
+        if (terminalRef.current?.writeToTerminal) {
+          terminalRef.current.writeToTerminal(`📋 Using command: ${startCommand.command} ${startCommand.args.join(' ')}\r\n`);
+        }
+
+        const startProcess = await instance.spawn(startCommand.command, startCommand.args);
+        console.log('8️⃣ 🚀 Server process spawned');
 
         instance.on('server-ready', (port: number, url: string) => {
+          console.log('9️⃣ 🌐 Server ready event received:', { port, url });
           if (terminalRef.current?.writeToTerminal) {
             terminalRef.current.writeToTerminal(`🌐 Server ready at ${url}\r\n`);
           }
@@ -184,6 +321,12 @@ const WebContainerPreview = ({
           }));
           setIsSetupComplete(true);
           setIsSetupInProgress(false);
+          // Expose readiness to the rest of the app (lightweight global flag)
+          try {
+            // @ts-ignore
+            (window as any).__APP_READY = true;
+          } catch {}
+          console.log('🔟 ✅ SUCCESS: WebContainer setup completed');
         });
 
         // Handle start process output - stream to terminal
@@ -196,12 +339,23 @@ const WebContainerPreview = ({
             },
           })
         );
+        console.log('9️⃣ 📤 Server output stream connected');
       } catch (err) {
-        console.error('Error setting up container:', err);
+        console.error('❌ ERROR: WebContainer setup failed:', err);
         const errorMessage = err instanceof Error ? err.message : String(err);
+        console.log('❌ FAILED: Setup error', {
+          errorMessage: errorMessage,
+          step: currentStep,
+        });
+
         if (terminalRef.current?.writeToTerminal) {
-          terminalRef.current.writeToTerminal(`❌ Error: ${errorMessage}\r\n`);
+          terminalRef.current.writeToTerminal(`❌ Setup Error: ${errorMessage}\r\n`);
+          terminalRef.current.writeToTerminal('💡 Troubleshooting tips:\r\n');
+          terminalRef.current.writeToTerminal('  - Check if package.json exists and is valid\r\n');
+          terminalRef.current.writeToTerminal('  - Ensure all dependencies are properly defined\r\n');
+          terminalRef.current.writeToTerminal('  - Try refreshing the page to restart\r\n');
         }
+
         setSetupError(errorMessage);
         setIsSetupInProgress(false);
         setLoadingState({
@@ -211,6 +365,7 @@ const WebContainerPreview = ({
           starting: false,
           ready: false,
         });
+        console.groupEnd();
       }
     }
 
@@ -228,6 +383,12 @@ const WebContainerPreview = ({
           <Loader2 className='h-10 w-10 animate-spin text-primary mx-auto' />
           <h3 className='text-lg font-medium'>Initializing WebContainer</h3>
           <p className='text-sm text-gray-500 dark:text-gray-400'>Setting up the environment for your project...</p>
+          {isRetrying && <div className='text-sm text-orange-600 dark:text-orange-400'>Retry attempt {retryCount}/3</div>}
+          {retryInitialization && (
+            <button onClick={retryInitialization} className='text-sm text-blue-600 dark:text-blue-400 hover:underline'>
+              Manual Retry
+            </button>
+          )}
         </div>
       </div>
     );
@@ -241,7 +402,15 @@ const WebContainerPreview = ({
             <XCircle className='h-5 w-5' />
             <h3 className='font-semibold'>Error</h3>
           </div>
-          <p className='text-sm'>{error || setupError}</p>
+          <p className='text-sm mb-4'>{error || setupError}</p>
+          {retryInitialization && (
+            <button
+              onClick={retryInitialization}
+              className='text-sm bg-red-100 dark:bg-red-800 px-3 py-1 rounded hover:bg-red-200 dark:hover:bg-red-700'
+            >
+              Retry Initialization
+            </button>
+          )}
         </div>
       </div>
     );

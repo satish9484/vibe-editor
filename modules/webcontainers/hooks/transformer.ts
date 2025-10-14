@@ -21,14 +21,42 @@ interface WebContainerDirectory {
 type WebContainerFileSystem = Record<string, WebContainerFile | WebContainerDirectory>;
 
 export function transformToWebContainerFormat(template: { folderName: string; items: TemplateItem[] }): WebContainerFileSystem {
+  if (!template || !template.items || !Array.isArray(template.items)) {
+    throw new Error('Invalid template data: template must have items array');
+  }
+
   function processItem(item: TemplateItem): WebContainerFile | WebContainerDirectory {
+    if (!item) {
+      throw new Error('Invalid item: item cannot be null or undefined');
+    }
+
     if (item.folderName && item.items) {
       // This is a directory
+      if (!Array.isArray(item.items)) {
+        throw new Error(`Invalid directory "${item.folderName}": items must be an array`);
+      }
+
       const directoryContents: WebContainerFileSystem = {};
 
-      item.items.forEach(subItem => {
-        const key = subItem.fileExtension ? `${subItem.filename}.${subItem.fileExtension}` : subItem.folderName!;
-        directoryContents[key] = processItem(subItem);
+      item.items.forEach((subItem, index) => {
+        if (!subItem) {
+          console.warn(`Skipping null/undefined item at index ${index} in directory "${item.folderName}"`);
+          return;
+        }
+
+        try {
+          const key = subItem.fileExtension ? `${subItem.filename}.${subItem.fileExtension}` : subItem.folderName!;
+
+          if (!key) {
+            console.warn(`Skipping item with no filename/folderName at index ${index} in directory "${item.folderName}"`);
+            return;
+          }
+
+          directoryContents[key] = processItem(subItem);
+        } catch (error) {
+          console.error(`Error processing item at index ${index} in directory "${item.folderName}":`, error);
+          throw error;
+        }
       });
 
       return {
@@ -36,9 +64,17 @@ export function transformToWebContainerFormat(template: { folderName: string; it
       };
     } else {
       // This is a file
+      if (!item.filename || !item.fileExtension) {
+        throw new Error(`Invalid file: filename (${item.filename}) and fileExtension (${item.fileExtension}) are required`);
+      }
+
+      if (typeof item.content !== 'string') {
+        console.warn(`File "${item.filename}.${item.fileExtension}" has non-string content, converting to string`);
+      }
+
       return {
         file: {
-          contents: item.content,
+          contents: String(item.content || ''),
         },
       };
     }
@@ -46,11 +82,26 @@ export function transformToWebContainerFormat(template: { folderName: string; it
 
   const result: WebContainerFileSystem = {};
 
-  template.items.forEach(item => {
-    const key = item.fileExtension ? `${item.filename}.${item.fileExtension}` : item.folderName!;
-    result[key] = processItem(item);
+  template.items.forEach((item, index) => {
+    if (!item) {
+      console.warn(`Skipping null/undefined item at index ${index} in root template`);
+      return;
+    }
+
+    try {
+      const key = item.fileExtension ? `${item.filename}.${item.fileExtension}` : item.folderName!;
+
+      if (!key) {
+        console.warn(`Skipping item with no filename/folderName at index ${index} in root template`);
+        return;
+      }
+
+      result[key] = processItem(item);
+    } catch (error) {
+      console.error(`Error processing root item at index ${index}:`, error);
+      throw error;
+    }
   });
 
   return result;
 }
-1;

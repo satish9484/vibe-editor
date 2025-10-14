@@ -52,7 +52,30 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('Context analysis error:', error);
-    return NextResponse.json({ error: 'Internal server error', message: error.message }, { status: 500 });
+
+    // Provide more specific error messages based on error type
+    let errorMessage = 'Internal server error';
+    let statusCode = 500;
+
+    if (error.message?.includes('AI service error')) {
+      errorMessage = 'AI service temporarily unavailable';
+      statusCode = 503;
+    } else if (error.message?.includes('fetch')) {
+      errorMessage = 'Unable to connect to AI service';
+      statusCode = 503;
+    } else if (error.message?.includes('Invalid input')) {
+      errorMessage = 'Invalid request parameters';
+      statusCode = 400;
+    }
+
+    return NextResponse.json(
+      {
+        error: errorMessage,
+        message: error.message,
+        type: 'api_error',
+      },
+      { status: statusCode }
+    );
   }
 }
 
@@ -152,7 +175,18 @@ async function generateSuggestion(prompt: string): Promise<string> {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Ollama error response:', errorText);
-      throw new Error(`AI service error: ${response.statusText} - ${errorText}`);
+
+      // Provide more specific error messages based on OLLAMA response
+      let errorMessage = `AI service error: ${response.statusText}`;
+      if (response.status === 404) {
+        errorMessage = 'AI model not found. Please check if the model is installed.';
+      } else if (response.status === 500) {
+        errorMessage = 'AI service internal error. The model may be overloaded.';
+      } else if (response.status === 503) {
+        errorMessage = 'AI service temporarily unavailable. Please try again later.';
+      }
+
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();
@@ -165,9 +199,19 @@ async function generateSuggestion(prompt: string): Promise<string> {
     }
 
     return suggestion;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('AI generation error:', error);
-    return '// AI suggestion unavailable';
+
+    // Provide more specific error messages for different error types
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Unable to connect to AI service. Please check your network connection.');
+    } else if (error instanceof Error && error.message?.includes('AI model not found')) {
+      throw new Error('AI model not found. Please check if the model is installed.');
+    } else if (error instanceof Error && error.message?.includes('AI service')) {
+      throw error; // Re-throw OLLAMA-specific errors
+    } else {
+      throw new Error('AI suggestion generation failed. Please try again.');
+    }
   }
 }
 
