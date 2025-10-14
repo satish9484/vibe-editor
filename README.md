@@ -174,7 +174,7 @@ Copy `.env.example` to `.env` and configure the following variables:
 
 ```env
 # Database Configuration
-DATABASE_URL="mongodb+srv://username:password@cluster.mongodb.net/vibe-editor?retryWrites=true&w=majority"
+DATABASE_URL="mongodb+srv://<username>:passw<ord@cluster.mongodb.net/<databasename>?retryWrites=true&w=majority"
 
 # Authentication Configuration
 AUTH_SECRET="your-super-secret-auth-key-here"
