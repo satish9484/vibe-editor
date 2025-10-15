@@ -59,7 +59,7 @@ const MainPlaygroundPage = () => {
     retryCount,
     isRetrying,
     retryInitialization,
-    // @ts-ignore
+    // @ts-expect-error - useWebContainer hook type mismatch
   } = useWebContainer({ templateData });
 
   const lastSyncedContent = useRef<Map<string, string>>(new Map());
@@ -145,12 +145,19 @@ const MainPlaygroundPage = () => {
 
         const updatedTemplateData = JSON.parse(JSON.stringify(latestTemplateData));
 
-        // @ts-ignore
-        const updateFileContent = (items: any[]) =>
-          // @ts-ignore
-          items.map(item => {
+        // Define a proper type for template items
+        type TemplateItem = {
+          folderName?: string;
+          filename?: string;
+          fileExtension?: string;
+          content?: string;
+          items?: TemplateItem[];
+        };
+
+        const updateFileContent = (items: TemplateItem[]): TemplateItem[] =>
+          items.map((item: TemplateItem) => {
             if ('folderName' in item) {
-              return { ...item, items: updateFileContent(item.items) };
+              return { ...item, items: updateFileContent(item.items || []) };
             } else if (item.filename === fileToSave.filename && item.fileExtension === fileToSave.fileExtension) {
               return { ...item, content: fileToSave.content };
             }
@@ -203,7 +210,7 @@ const MainPlaygroundPage = () => {
     try {
       await Promise.all(unsavedFiles.map(f => handleSave(f.id)));
       toast.success(`Saved ${unsavedFiles.length} file(s)`);
-    } catch (error) {
+    } catch {
       toast.error('Failed to save some files');
     }
   };

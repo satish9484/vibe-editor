@@ -1,11 +1,5 @@
 'use client';
 
-import Image from 'next/image';
-import { format, parseISO } from 'date-fns';
-import type { Project } from '../types';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,15 +10,21 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { format } from 'date-fns';
+import { Copy, Download, Edit3, ExternalLink, Eye, MoreHorizontal, Trash2 } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-import { MoreHorizontal, Edit3, Trash2, ExternalLink, Copy, Download, Eye } from 'lucide-react';
 import { toast } from 'sonner';
+import type { Project } from '../types';
 import { MarkedToggleButton } from './marked-toggle';
 
 interface ProjectTableProps {
@@ -144,7 +144,7 @@ export default function ProjectTable({ projects, onUpdateProject, onDeleteProjec
                     <Link href={`/playground/${project.id}`} className='hover:underline'>
                       <span className='font-semibold'>{project.title}</span>
                     </Link>
-                    <span className='text-sm text-gray-500 line-clamp-1'>{project.description}</span>
+                    <span className='text-sm text-gray-500 line-clamp-1'>{project.description || 'No description'}</span>
                   </div>
                 </TableCell>
                 <TableCell>
@@ -158,9 +158,15 @@ export default function ProjectTable({ projects, onUpdateProject, onDeleteProjec
                 <TableCell>
                   <div className='flex items-center gap-2'>
                     <div className='w-8 h-8 rounded-full overflow-hidden'>
-                      <Image src={project.user.image || '/placeholder.svg'} alt={project.user.name} width={32} height={32} className='object-cover' />
+                      <Image
+                        src={project.user.image || '/placeholder.svg'}
+                        alt={project.user.name || 'User'}
+                        width={32}
+                        height={32}
+                        className='object-cover'
+                      />
                     </div>
-                    <span className='text-sm'>{project.user.name}</span>
+                    <span className='text-sm'>{project.user.name || 'Unknown User'}</span>
                   </div>
                 </TableCell>
                 <TableCell>

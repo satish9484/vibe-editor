@@ -50,28 +50,30 @@ export async function POST(request: NextRequest) {
         generatedAt: new Date().toISOString(),
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Context analysis error:', error);
 
     // Provide more specific error messages based on error type
     let errorMessage = 'Internal server error';
     let statusCode = 500;
 
-    if (error.message?.includes('AI service error')) {
-      errorMessage = 'AI service temporarily unavailable';
-      statusCode = 503;
-    } else if (error.message?.includes('fetch')) {
-      errorMessage = 'Unable to connect to AI service';
-      statusCode = 503;
-    } else if (error.message?.includes('Invalid input')) {
-      errorMessage = 'Invalid request parameters';
-      statusCode = 400;
+    if (error instanceof Error) {
+      if (error.message?.includes('AI service error')) {
+        errorMessage = 'AI service temporarily unavailable';
+        statusCode = 503;
+      } else if (error.message?.includes('fetch')) {
+        errorMessage = 'Unable to connect to AI service';
+        statusCode = 503;
+      } else if (error.message?.includes('Invalid input')) {
+        errorMessage = 'Invalid request parameters';
+        statusCode = 400;
+      }
     }
 
     return NextResponse.json(
       {
         error: errorMessage,
-        message: error.message,
+        message: error instanceof Error ? error.message : 'Unknown error',
         type: 'api_error',
       },
       { status: statusCode }
@@ -143,6 +145,100 @@ Generate suggestion:`;
 
 async function generateSuggestion(prompt: string): Promise<string> {
   try {
+    // Check if we're running on Vercel (production) or local development
+    const isVercel = Boolean(process.env.VERCEL);
+    const huggingFaceApiKey = process.env.HUGGINGFACE_API_KEY;
+
+    if (isVercel && huggingFaceApiKey) {
+      // Use Hugging Face for Vercel deployment
+      return await generateWithHuggingFace(prompt, huggingFaceApiKey);
+    } else if (!isVercel) {
+      // Use Ollama for local development
+      return await generateWithOllama(prompt);
+    } else {
+      // Fallback: return empty suggestion if no AI service available
+      return '';
+    }
+  } catch (error: unknown) {
+    console.error('AI generation error:', error);
+
+    // Provide more specific error messages for different error types
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Unable to connect to AI service. Please check your network connection.');
+    } else if (error instanceof Error && error.message?.includes('AI model not found')) {
+      throw new Error('AI model not found. Please check if the model is installed.');
+    } else if (error instanceof Error && error.message?.includes('AI service')) {
+      throw error; // Re-throw AI-specific errors
+    } else {
+      throw new Error('AI suggestion generation failed. Please try again.');
+    }
+  }
+}
+
+async function generateWithHuggingFace(prompt: string, apiKey: string): Promise<string> {
+  try {
+    console.log('Using Hugging Face API for code completion');
+
+    const response = await fetch('https://api-inference.huggingface.co/models/microsoft/CodeBERT-base', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        inputs: prompt,
+        parameters: {
+          max_length: 300,
+          temperature: 0.7,
+          do_sample: true,
+          top_p: 0.9,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Hugging Face error response:', errorText);
+
+      let errorMessage = `Hugging Face API error: ${response.statusText}`;
+      if (response.status === 401) {
+        errorMessage = 'Invalid Hugging Face API key. Please check your credentials.';
+      } else if (response.status === 429) {
+        errorMessage = 'Hugging Face API rate limit exceeded. Please try again later.';
+      } else if (response.status === 503) {
+        errorMessage = 'Hugging Face model is loading. Please try again in a moment.';
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+
+    // Handle different response formats from Hugging Face
+    let suggestion = '';
+    if (Array.isArray(data) && data.length > 0) {
+      suggestion = data[0].generated_text || data[0].text || '';
+    } else if (typeof data === 'string') {
+      suggestion = data;
+    } else if (data.generated_text) {
+      suggestion = data.generated_text;
+    }
+
+    // Clean up the suggestion
+    if (suggestion.includes('```')) {
+      const codeMatch = suggestion.match(/```[\w]*\n?([\s\S]*?)```/);
+      suggestion = codeMatch ? codeMatch[1].trim() : suggestion;
+    }
+
+    return suggestion.trim();
+  } catch (error) {
+    console.error('Hugging Face generation error:', error);
+    throw new Error(`Hugging Face API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+async function generateWithOllama(prompt: string): Promise<string> {
+  try {
     const ollamaUrl = process.env.OLLAMA_HOST || 'http://ollama:11434';
     const requestBody = {
       // Current working model (lightweight, ~637MB)
@@ -162,7 +258,7 @@ async function generateSuggestion(prompt: string): Promise<string> {
       },
     };
 
-    console.log('Ollama request:', JSON.stringify(requestBody, null, 2));
+    console.log('Using Ollama for code completion:', JSON.stringify(requestBody, null, 2));
 
     const response = await fetch(`${ollamaUrl}/api/generate`, {
       method: 'POST',
@@ -199,19 +295,9 @@ async function generateSuggestion(prompt: string): Promise<string> {
     }
 
     return suggestion;
-  } catch (error: unknown) {
-    console.error('AI generation error:', error);
-
-    // Provide more specific error messages for different error types
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      throw new Error('Unable to connect to AI service. Please check your network connection.');
-    } else if (error instanceof Error && error.message?.includes('AI model not found')) {
-      throw new Error('AI model not found. Please check if the model is installed.');
-    } else if (error instanceof Error && error.message?.includes('AI service')) {
-      throw error; // Re-throw OLLAMA-specific errors
-    } else {
-      throw new Error('AI suggestion generation failed. Please try again.');
-    }
+  } catch (error) {
+    console.error('Ollama generation error:', error);
+    throw new Error(`Ollama API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 

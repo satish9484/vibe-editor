@@ -293,9 +293,19 @@ vibe-editor/
 
 ## 🤖 AI Features
 
-### Ollama Model Configuration
+### AI Service Configuration
 
-The application supports multiple AI models for code completion:
+The application automatically switches between AI services based on the
+environment:
+
+| Environment           | AI Service   | Model               | Cost                     | Setup        |
+| --------------------- | ------------ | ------------------- | ------------------------ | ------------ |
+| **Local Development** | Ollama       | TinyLlama/CodeLlama | Free                     | Docker setup |
+| **Vercel Production** | Hugging Face | CodeBERT            | Free (1K requests/month) | API key      |
+
+### Local Development (Ollama)
+
+For local development, the app uses Ollama with these models:
 
 | Model                | Size   | RAM Required | Performance                      |
 | -------------------- | ------ | ------------ | -------------------------------- |
@@ -303,22 +313,7 @@ The application supports multiple AI models for code completion:
 | **CodeLlama:7b**     | 3.8 GB | 6GB+         | Better code understanding        |
 | **CodeLlama:latest** | 3.8 GB | 6GB+         | Latest improvements              |
 
-### Switching Models
-
-To change the AI model, edit `app/api/code-completion/route.ts`:
-
-```typescript
-const requestBody = {
-  // Current working model (lightweight)
-  model: 'tinyllama',
-
-  // Alternative models (uncomment to use):
-  // model: 'codellama:latest',     // Requires 6GB+ RAM
-  // model: 'codellama:7b',         // Requires 6GB+ RAM
-};
-```
-
-### Model Management Commands
+#### Ollama Model Management
 
 ```bash
 # List installed models
@@ -331,10 +326,114 @@ docker-compose exec ollama ollama pull tinyllama
 docker-compose exec ollama ollama run tinyllama "Hello"
 ```
 
+### Vercel Deployment (Hugging Face)
+
+For Vercel deployment, the app uses Hugging Face Inference API:
+
+#### Setup Steps
+
+1. **Create Hugging Face account** (free)
+   - Go to [huggingface.co](https://huggingface.co)
+   - Sign up for a free account
+
+2. **Get API token**
+   - Go to [Settings > Access Tokens](https://huggingface.co/settings/tokens)
+   - Create a new token with "Read" permissions
+
+3. **Add to Vercel environment variables**
+   ```
+   HUGGINGFACE_API_KEY=hf_your_token_here
+   ```
+
+#### Hugging Face Benefits
+
+- ✅ **Free tier**: 1,000 requests/month
+- ✅ **No credit card** required
+- ✅ **CodeBERT model** optimized for code completion
+- ✅ **Automatic scaling** on Vercel
+- ✅ **No local setup** required
+
+### Switching AI Services
+
+The app automatically detects the environment:
+
+```typescript
+// Automatic detection in app/api/code-completion/route.ts
+const isVercel = process.env.VERCEL;
+const huggingFaceApiKey = process.env.HUGGINGFACE_API_KEY;
+
+if (isVercel && huggingFaceApiKey) {
+  // Use Hugging Face for Vercel deployment
+  return await generateWithHuggingFace(prompt, huggingFaceApiKey);
+} else if (!isVercel) {
+  // Use Ollama for local development
+  return await generateWithOllama(prompt);
+}
+```
+
 ## 🐳 Docker Deployment
 
 For detailed Docker deployment instructions, see
 [DOCKER-README.md](DOCKER-README.md).
+
+## 🚀 Vercel Deployment
+
+### Prerequisites
+
+- Vercel account (free)
+- Hugging Face account (free)
+- MongoDB Atlas database
+- Google/GitHub OAuth credentials
+
+### Quick Deploy Steps
+
+1. **Fork this repository** to your GitHub account
+
+2. **Connect to Vercel**
+   - Go to [vercel.com](https://vercel.com)
+   - Sign in with GitHub
+   - Click "New Project"
+   - Import your forked repository
+
+3. **Set Environment Variables** Add these in your Vercel project settings:
+
+   ```
+   DATABASE_URL=mongodb+srv://username:password@cluster.mongodb.net/vibe-editor?retryWrites=true&w=majority
+   AUTH_SECRET=your-super-secret-auth-key-here
+   AUTH_GOOGLE_ID=your-google-oauth-client-id
+   AUTH_GOOGLE_SECRET=your-google-oauth-client-secret
+   AUTH_GITHUB_ID=your-github-oauth-client-id
+   AUTH_GITHUB_SECRET=your-github-oauth-client-secret
+   HUGGINGFACE_API_KEY=hf_your_huggingface_token_here
+   NEXTAUTH_URL=https://your-app-name.vercel.app
+   ```
+
+4. **Deploy**
+   - Vercel will automatically deploy on every push to main branch
+   - Your app will be available at `https://your-app-name.vercel.app`
+
+### Environment Variables for Vercel
+
+| Variable              | Description                     | Required |
+| --------------------- | ------------------------------- | -------- |
+| `DATABASE_URL`        | MongoDB Atlas connection string | ✅       |
+| `AUTH_SECRET`         | NextAuth secret key             | ✅       |
+| `AUTH_GOOGLE_ID`      | Google OAuth client ID          | ✅       |
+| `AUTH_GOOGLE_SECRET`  | Google OAuth client secret      | ✅       |
+| `AUTH_GITHUB_ID`      | GitHub OAuth client ID          | ✅       |
+| `AUTH_GITHUB_SECRET`  | GitHub OAuth client secret      | ✅       |
+| `HUGGINGFACE_API_KEY` | Hugging Face API token          | ✅       |
+| `NEXTAUTH_URL`        | Your Vercel domain              | ✅       |
+
+### Vercel vs Local Development
+
+| Feature         | Local Development  | Vercel Production       |
+| --------------- | ------------------ | ----------------------- |
+| **AI Service**  | Ollama (TinyLlama) | Hugging Face (CodeBERT) |
+| **Database**    | MongoDB Atlas      | MongoDB Atlas           |
+| **Cost**        | Free               | Free                    |
+| **Setup**       | Docker required    | No setup needed         |
+| **AI Requests** | Unlimited          | 1,000/month             |
 
 ## 🐛 Troubleshooting
 
