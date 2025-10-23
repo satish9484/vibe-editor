@@ -4,7 +4,7 @@
  * @type {string[]}
  */
 
-export const publicRoutes: string[] = ['/api/code-completion', '/api/chat'];
+export const publicRoutes: string[] = ['/', '/api/code-completion', '/api/chat'];
 
 /**
  * An Array of routes that are protected
@@ -12,7 +12,7 @@ export const publicRoutes: string[] = ['/api/code-completion', '/api/chat'];
  * @type {string[]}
  */
 
-export const protectedRoutes: string[] = ['/'];
+export const protectedRoutes: string[] = ['/dashboard', '/playground'];
 
 /**
  * An Array of routes that are accessible to the public

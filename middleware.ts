@@ -1,6 +1,6 @@
 import NextAuth from 'next-auth';
 
-import { DEFAULT_LOGIN_REDIRECT, apiAuthPrefix, publicRoutes, authRoutes } from '@/routes';
+import { DEFAULT_LOGIN_REDIRECT, apiAuthPrefix, authRoutes, protectedRoutes, publicRoutes } from '@/routes';
 import authConfig from './auth.config';
 
 const { auth } = NextAuth(authConfig);
@@ -11,9 +11,11 @@ export default auth(req => {
 
   const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
 
-  const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
+  const isPublicRoute = publicRoutes.includes(nextUrl.pathname) || publicRoutes.some(route => nextUrl.pathname.startsWith(route));
 
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
+
+  const isProtectedRoute = protectedRoutes.some(route => nextUrl.pathname.startsWith(route));
 
   if (isApiAuthRoute) {
     return null;
@@ -26,7 +28,7 @@ export default auth(req => {
     return null;
   }
 
-  if (!isLoggedIn && !isPublicRoute) {
+  if (!isLoggedIn && isProtectedRoute) {
     return Response.redirect(new URL('/auth/sign-in', nextUrl));
   }
 

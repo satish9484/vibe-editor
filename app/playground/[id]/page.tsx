@@ -117,8 +117,8 @@ const MainPlaygroundPage = () => {
     [handleRenameFolder, saveTemplateData]
   );
 
-  const activeFile = openFiles.find(file => file.id === activeFileId);
-  const hasUnsavedChanges = openFiles.some(file => file.hasUnsavedChanges);
+  const activeFile = openFiles?.find(file => file.id === activeFileId);
+  const hasUnsavedChanges = openFiles?.some(file => file.hasUnsavedChanges) || false;
 
   const handleFileSelect = (file: TemplateFile) => {
     openFile(file);
@@ -128,6 +128,12 @@ const MainPlaygroundPage = () => {
     async (fileId?: string) => {
       const targetFileId = fileId || activeFileId;
       if (!targetFileId) return;
+
+      // Add null check to prevent find error
+      if (!openFiles || !Array.isArray(openFiles)) {
+        toast.error('No files available to save');
+        return;
+      }
 
       const fileToSave = openFiles.find(f => f.id === targetFileId);
 
@@ -177,7 +183,7 @@ const MainPlaygroundPage = () => {
         await saveTemplateData(updatedTemplateData);
         setTemplateData(updatedTemplateData);
         // Update open files
-        const updatedOpenFiles = openFiles.map(f =>
+        const updatedOpenFiles = (openFiles || []).map(f =>
           f.id === targetFileId
             ? {
                 ...f,
@@ -200,6 +206,12 @@ const MainPlaygroundPage = () => {
   );
 
   const handleSaveAll = async () => {
+    // Add null check to prevent filter error
+    if (!openFiles || !Array.isArray(openFiles)) {
+      toast.error('No files available to save');
+      return;
+    }
+
     const unsavedFiles = openFiles.filter(f => f.hasUnsavedChanges);
 
     if (unsavedFiles.length === 0) {
@@ -307,7 +319,7 @@ const MainPlaygroundPage = () => {
               <div className='flex flex-col flex-1'>
                 <h1 className='text-sm font-medium'>{playgroundData?.title || 'Code Playground'}</h1>
                 <p className='text-xs text-muted-foreground'>
-                  {openFiles.length} File(s) Open
+                  {openFiles?.length || 0} File(s) Open
                   {hasUnsavedChanges && ' • Unsaved changes'}
                 </p>
               </div>
@@ -361,13 +373,13 @@ const MainPlaygroundPage = () => {
           </header>
 
           <div className='h-[calc(100vh-4rem)]'>
-            {openFiles.length > 0 ? (
+            {(openFiles?.length || 0) > 0 ? (
               <div className='h-full flex flex-col'>
                 <div className='border-b bg-muted/30'>
                   <Tabs value={activeFileId || ''} onValueChange={setActiveFileId}>
                     <div className='flex items-center justify-between px-4 py-2'>
                       <TabsList className='h-8 bg-transparent p-0'>
-                        {openFiles.map(file => (
+                        {(openFiles || []).map(file => (
                           <TabsTrigger
                             key={file.id}
                             value={file.id}
@@ -393,7 +405,7 @@ const MainPlaygroundPage = () => {
                         ))}
                       </TabsList>
 
-                      {openFiles.length > 1 && (
+                      {(openFiles?.length || 0) > 1 && (
                         <Button size='sm' variant='ghost' onClick={closeAllFiles} className='h-6 px-2 text-xs'>
                           Close All
                         </Button>
