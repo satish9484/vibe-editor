@@ -1,5 +1,5 @@
-import { create } from 'zustand';
 import { toast } from 'sonner';
+import { create } from 'zustand';
 
 import { TemplateFile, TemplateFolder } from '../lib/path-to-json';
 
@@ -165,7 +165,22 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
 
       // Sync with web container
       if (writeFileSync) {
-        const filePath = parentPath ? `${parentPath}/${newFile.filename}.${newFile.fileExtension}` : `${newFile.filename}.${newFile.fileExtension}`;
+        // Validate filename and extension
+        if (!newFile.filename || !newFile.fileExtension) {
+          console.error('Invalid file: missing filename or extension');
+          return;
+        }
+
+        // Sanitize filename and extension
+        const sanitizedFilename = newFile.filename.replace(/[<>:"|?*]/g, '');
+        const sanitizedExtension = newFile.fileExtension.replace(/[<>:"|?*]/g, '');
+
+        if (!sanitizedFilename || !sanitizedExtension) {
+          console.error('Invalid file: filename or extension became empty after sanitization');
+          return;
+        }
+
+        const filePath = parentPath ? `${parentPath}/${sanitizedFilename}.${sanitizedExtension}` : `${sanitizedFilename}.${sanitizedExtension}`;
         await writeFileSync(filePath, newFile.content || '');
       }
 

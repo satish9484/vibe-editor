@@ -3,10 +3,10 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Label } from '@/components/ui/label';
-import { ChevronRight, Search, Star, Code, Server, Globe, Zap, Clock, Check, Plus } from 'lucide-react';
+import { Check, ChevronRight, Clock, Code, Globe, Plus, Search, Server, Star, Zap } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 
@@ -105,11 +105,13 @@ const TemplateSelectionModal = ({ isOpen, onClose, onSubmit }: TemplateSelection
   const [category, setCategory] = useState<'all' | 'frontend' | 'backend' | 'fullstack'>('all');
   const [projectName, setProjectName] = useState('');
 
-  const filteredTemplates = templates.filter(template => {
+  // Add null check to prevent filter error
+  const safeTemplates = templates || [];
+  const filteredTemplates = safeTemplates.filter(template => {
     const matchesSearch =
       template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       template.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      template.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+      (template.tags || []).some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
 
     const matchesCategory = category === 'all' || template.category === category;
 

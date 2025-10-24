@@ -1,11 +1,24 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupAction,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarRail,
+} from '@/components/ui/sidebar';
 import {
   Code2,
   Compass,
+  Database,
+  FlameIcon,
   FolderPlus,
   History,
   Home,
@@ -17,25 +30,11 @@ import {
   Star,
   Terminal,
   Zap,
-  Database,
-  FlameIcon,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarGroupAction,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarRail,
-} from '@/components/ui/sidebar';
 import Image from 'next/image';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 
 // Define the interface for a single playground item, icon is now a string
 interface PlaygroundData {
@@ -59,14 +58,16 @@ const lucideIconMap: Record<string, LucideIcon> = {
 
 export function DashboardSidebar({ initialPlaygroundData }: { initialPlaygroundData: PlaygroundData[] }) {
   const pathname = usePathname();
-  const [starredPlaygrounds, setStarredPlaygrounds] = useState(initialPlaygroundData.filter(p => p.starred));
-  const [recentPlaygrounds, setRecentPlaygrounds] = useState(initialPlaygroundData);
+  // Add null check to prevent filter error
+  const safePlaygroundData = initialPlaygroundData || [];
+  const [starredPlaygrounds, setStarredPlaygrounds] = useState(safePlaygroundData.filter(p => p.starred));
+  const [recentPlaygrounds, setRecentPlaygrounds] = useState(safePlaygroundData);
 
   return (
     <Sidebar variant='inset' collapsible='icon' className='border-1 border-r'>
       <SidebarHeader>
         <div className='flex items-center gap-2 px-4 py-3 justify-center'>
-          <Image src={'/logo.svg'} alt='logo' height={60} width={60} />
+          <Image src={'/logo.svg'} alt='logo' height={60} width={60} style={{ width: 'auto', height: 'auto' }} />
         </div>
       </SidebarHeader>
       <SidebarContent>

@@ -16,12 +16,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
     ANGULAR: 'Terminal',
   };
 
-  const formattedPlaygroundData = playgroundData?.map(item => ({
-    id: item.id,
-    name: item.title,
-    starred: item.Starmark?.[0]?.isMarked || false,
-    icon: technologyIconMap[item.template] || 'Code2',
-  }));
+  // Add null check to prevent map error
+  const formattedPlaygroundData =
+    playgroundData?.map(item => ({
+      id: item.id,
+      name: item.title,
+      starred: item.Starmark?.[0]?.isMarked || false,
+      icon: technologyIconMap[item.template] || 'Code2',
+    })) || [];
 
   return (
     <SidebarProvider>

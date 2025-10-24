@@ -9,6 +9,7 @@ interface UseWebContaierReturn {
   serverUrl: string | null;
   isLoading: boolean;
   error: string | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   instance: any;
   writeFileSync: (path: string, content: string) => Promise<void>;
   destory: () => void;
@@ -17,10 +18,12 @@ interface UseWebContaierReturn {
   retryInitialization: () => void;
 }
 
-export const useWebContainer = ({ templateData }: UseWebContainerProps): UseWebContaierReturn => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const useWebContainer = ({ templateData: _templateData }: UseWebContainerProps): UseWebContaierReturn => {
   const [serverUrl, setServerUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [instance, setInstance] = useState<any>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
@@ -123,7 +126,7 @@ export const useWebContainer = ({ templateData }: UseWebContainerProps): UseWebC
         instance.teardown();
       }
     };
-  }, [retryCount]);
+  }, [retryCount, instance]);
 
   const writeFileSync = useCallback(
     async (path: string, content: string): Promise<void> => {
@@ -140,13 +143,34 @@ export const useWebContainer = ({ templateData }: UseWebContainerProps): UseWebC
         throw new Error('WebContainer instance is not available');
       }
 
+      // Validate and sanitize path
+      if (!path || typeof path !== 'string') {
+        console.log('1️⃣ ❌ BLOCKED: Invalid file path');
+        console.groupEnd();
+        throw new Error('Invalid file path provided');
+      }
+
+      // Sanitize path to prevent illegal characters
+      const sanitizedPath = path
+        .replace(/[<>:"|?*]/g, '') // Remove illegal characters
+        .replace(/\.\./g, '') // Remove parent directory references
+        .replace(/^\/+/, '') // Remove leading slashes
+        .replace(/\/+/g, '/'); // Replace multiple slashes with single slash
+
+      if (!sanitizedPath) {
+        console.log('1️⃣ ❌ BLOCKED: Path became empty after sanitization');
+        console.groupEnd();
+        throw new Error('Invalid file path after sanitization');
+      }
+
       try {
         console.log('2️⃣ 🔍 Parsing file path:', {
-          path: path,
-          pathParts: path.split('/'),
+          originalPath: path,
+          sanitizedPath: sanitizedPath,
+          pathParts: sanitizedPath.split('/'),
         });
 
-        const pathParts = path.split('/');
+        const pathParts = sanitizedPath.split('/');
         const folderPath = pathParts.slice(0, -1).join('/');
 
         if (folderPath) {
@@ -161,11 +185,11 @@ export const useWebContainer = ({ templateData }: UseWebContainerProps): UseWebC
         }
 
         console.log('4️⃣ 📝 Writing file content:', {
-          filePath: path,
+          filePath: sanitizedPath,
           contentLength: content.length,
           contentPreview: content.substring(0, 100) + (content.length > 100 ? '...' : ''),
         });
-        await instance.fs.writeFile(path, content);
+        await instance.fs.writeFile(sanitizedPath, content);
         console.log('5️⃣ ✅ SUCCESS: File written successfully');
         console.groupEnd();
       } catch (err) {
@@ -173,7 +197,8 @@ export const useWebContainer = ({ templateData }: UseWebContainerProps): UseWebC
         const errorMessage = err instanceof Error ? err.message : 'Failed to write file';
         console.log('5️⃣ ❌ FAILED: File write error', {
           errorMessage: errorMessage,
-          filePath: path,
+          originalPath: path,
+          sanitizedPath: sanitizedPath,
         });
         console.groupEnd();
         throw new Error(`Failed to write file at ${path}: ${errorMessage}`);

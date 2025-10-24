@@ -5,7 +5,14 @@ const Page = () => {
   return (
     <>
       <div className='flex flex-col md:flex-row items-center justify-center min-h-screen'>
-        <Image src={'/login.svg'} alt='Login-Image' height={300} width={300} className='m-6 hidden object-cover md:block' />
+        <Image
+          src={'/login.svg'}
+          alt='Login-Image'
+          height={300}
+          width={300}
+          style={{ width: 'auto', height: 'auto' }}
+          className='m-6 hidden object-cover md:block'
+        />
         <SignInFormClient />
       </div>
     </>
