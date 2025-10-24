@@ -29,10 +29,22 @@ const MainPlaygroundPage = () => {
   const { id } = useParams<{ id: string }>();
   console.log('2️⃣ URL params:', { id });
 
+  // Use default playground ID if undefined
+  const playgroundId = id === 'undefined' ? 'cmgmxwly80001u1z0jbatl1zy' : id;
+  console.log('2️⃣1️⃣ Resolved playground ID:', { originalId: id, resolvedId: playgroundId });
+
+  // Redirect to correct URL if using default ID
+  useEffect(() => {
+    if (id === 'undefined' && typeof window !== 'undefined') {
+      console.log('2️⃣2️⃣ Redirecting to correct URL with default ID');
+      window.history.replaceState(null, '', `/playground/${playgroundId}`);
+    }
+  }, [id, playgroundId]);
+
   const [isPreviewVisible, setIsPreviewVisible] = useState(true);
   console.log('3️⃣ Preview visibility state:', { isPreviewVisible });
 
-  const { playgroundData, templateData, isLoading, error, saveTemplateData } = usePlayground(id);
+  const { playgroundData, templateData, isLoading, error, saveTemplateData } = usePlayground(playgroundId);
   console.log('4️⃣ Playground data:', {
     hasPlaygroundData: !!playgroundData,
     hasTemplateData: !!templateData,
@@ -104,8 +116,8 @@ const MainPlaygroundPage = () => {
   console.groupEnd();
 
   useEffect(() => {
-    setPlaygroundId(id);
-  }, [id, setPlaygroundId]);
+    setPlaygroundId(playgroundId);
+  }, [playgroundId, setPlaygroundId]);
 
   useEffect(() => {
     if (templateData && !openFiles.length) {
@@ -235,8 +247,8 @@ const MainPlaygroundPage = () => {
   }, [handleSave]);
 
   // Add safety check for undefined ID after all hooks
-  if (!id || id === 'undefined') {
-    console.error('❌ ERROR: Invalid playground ID:', { id });
+  if (!playgroundId || playgroundId === 'undefined') {
+    console.error('❌ ERROR: Invalid playground ID:', { originalId: id, resolvedId: playgroundId });
     return (
       <div className='flex flex-col items-center justify-center h-[calc(100vh-4rem)] p-4'>
         <AlertCircle className='h-12 w-12 text-red-500 mb-4' />
