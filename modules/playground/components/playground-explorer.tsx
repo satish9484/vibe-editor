@@ -1,9 +1,10 @@
 'use client';
 
+import { ChevronRight, Edit3, File, FilePlus, Folder, FolderPlus, MoreHorizontal, Plus, Trash2 } from 'lucide-react';
 import * as React from 'react';
-import { ChevronRight, File, Folder, Plus, FilePlus, FolderPlus, MoreHorizontal, Trash2, Edit3 } from 'lucide-react';
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import {
   Sidebar,
   SidebarContent,
@@ -17,15 +18,14 @@ import {
   SidebarMenuSub,
   SidebarRail,
 } from '@/components/ui/sidebar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 
 import { Button } from '@/components/ui/button';
 
-import RenameFolderDialog from './dialogs/rename-folder-dialog';
-import NewFolderDialog from './dialogs/new-folder-dialog';
-import NewFileDialog from './dialogs/new-file-dialog';
-import RenameFileDialog from './dialogs/rename-file-dialog';
 import { DeleteDialog } from './dialogs/delete-dialog';
+import NewFileDialog from './dialogs/new-file-dialog';
+import NewFolderDialog from './dialogs/new-folder-dialog';
+import RenameFileDialog from './dialogs/rename-file-dialog';
+import RenameFolderDialog from './dialogs/rename-folder-dialog';
 
 interface TemplateFile {
   filename: string;
@@ -233,7 +233,24 @@ function TemplateNode({
     return (
       <SidebarMenuItem>
         <div className='flex items-center group'>
-          <SidebarMenuButton isActive={isSelected} onClick={() => onFileSelect?.(file)} className='flex-1'>
+          <SidebarMenuButton
+            isActive={isSelected}
+            onClick={() => {
+              console.group('📁 File Selection Flow');
+              console.log('1️⃣ File clicked:', {
+                filename: file.filename,
+                extension: file.fileExtension,
+                fileName: fileName,
+                isSelected: isSelected,
+                hasOnFileSelect: !!onFileSelect,
+              });
+              console.log('2️⃣ Calling onFileSelect...');
+              onFileSelect?.(file);
+              console.log('3️⃣ ✅ SUCCESS: File selection completed');
+              console.groupEnd();
+            }}
+            className='flex-1'
+          >
             <File className='h-4 w-4 mr-2 shrink-0' />
             <span>{fileName}</span>
           </SidebarMenuButton>

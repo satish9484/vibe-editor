@@ -31,7 +31,7 @@ export function Header() {
                 {/* Logo Section with Navigation Links */}
                 <div className='flex items-center gap-6 justify-center'>
                   <Link href='/' className='flex items-center gap-2 justify-center'>
-                    <Image src={'/logo.svg'} alt='Logo' height={60} width={60} style={{ width: 'auto', height: 'auto' }} />
+                    <Image src={'/logo.svg'} alt='Logo' height={60} width={60} style={{ width: 'auto', height: 'auto' }} priority />
 
                     <span className='hidden sm:block font-extrabold text-lg'>VibeCode Editor</span>
                   </Link>

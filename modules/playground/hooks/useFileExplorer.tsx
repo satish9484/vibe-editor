@@ -83,15 +83,34 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
   setActiveFileId: fileId => set({ activeFileId: fileId }),
 
   openFile: file => {
+    console.group('📂 File Explorer - Open File Flow');
+    console.log('1️⃣ Open file request:', {
+      filename: file.filename,
+      extension: file.fileExtension,
+      contentLength: file.content?.length || 0,
+      hasTemplateData: !!get().templateData,
+    });
+
     const fileId = generateFileId(file, get().templateData!);
+    console.log('2️⃣ Generated file ID:', fileId);
+
     const { openFiles } = get();
+    console.log('3️⃣ Current open files:', {
+      count: openFiles.length,
+      fileIds: openFiles.map(f => f.id),
+    });
+
     const existingFile = openFiles.find(f => f.id === fileId);
 
     if (existingFile) {
+      console.log('4️⃣ ℹ️ File already open, switching to it');
       set({ activeFileId: fileId, editorContent: existingFile.content });
+      console.log('5️⃣ ✅ SUCCESS: Switched to existing file');
+      console.groupEnd();
       return;
     }
 
+    console.log('4️⃣ 📝 Creating new open file entry');
     const newOpenFile: OpenFile = {
       ...file,
       id: fileId,
@@ -100,11 +119,15 @@ export const useFileExplorer = create<FileExplorerState>((set, get) => ({
       originalContent: file.content || '',
     };
 
+    console.log('5️⃣ 📁 Adding file to open files list');
     set(state => ({
       openFiles: [...state.openFiles, newOpenFile],
       activeFileId: fileId,
       editorContent: file.content || '',
     }));
+
+    console.log('6️⃣ ✅ SUCCESS: File opened successfully');
+    console.groupEnd();
   },
 
   closeFile: fileId => {

@@ -13,7 +13,7 @@ import ToggleAI from '@/modules/playground/components/toggle-ai';
 import { useAISuggestions } from '@/modules/playground/hooks/useAISuggestion';
 import { useFileExplorer } from '@/modules/playground/hooks/useFileExplorer';
 import { usePlayground } from '@/modules/playground/hooks/usePlayground';
-import { findFilePath } from '@/modules/playground/lib';
+import { findFilePath, findFirstFile } from '@/modules/playground/lib';
 import { TemplateFile, TemplateFolder } from '@/modules/playground/lib/path-to-json';
 import WebContainerPreview from '@/modules/webcontainers/components/webcontainer-preview';
 import { useWebContainer } from '@/modules/webcontainers/hooks/useWebContainer';
@@ -121,9 +121,34 @@ const MainPlaygroundPage = () => {
 
   useEffect(() => {
     if (templateData && !openFiles.length) {
+      console.group('📁 Template Data Processing');
+      console.log('1️⃣ Template data received:', {
+        hasTemplateData: !!templateData,
+        templateFolderName: templateData.folderName,
+        itemsCount: templateData.items?.length || 0,
+        openFilesCount: openFiles.length,
+      });
+
       setTemplateData(templateData);
+
+      // Automatically open the first file
+      const firstFile = findFirstFile(templateData);
+      if (firstFile) {
+        console.log('2️⃣ Found first file to open:', {
+          filename: firstFile.filename,
+          extension: firstFile.fileExtension,
+          contentLength: firstFile.content?.length || 0,
+        });
+
+        console.log('3️⃣ Opening first file automatically');
+        openFile(firstFile);
+        console.log('4️⃣ ✅ SUCCESS: First file opened');
+      } else {
+        console.log('2️⃣ ⚠️ No files found in template data');
+      }
+      console.groupEnd();
     }
-  }, [templateData, setTemplateData, openFiles.length]);
+  }, [templateData, setTemplateData, openFiles.length, openFile]);
 
   // Create wrapper functions that pass saveTemplateData
   const wrappedHandleAddFile = useCallback(
