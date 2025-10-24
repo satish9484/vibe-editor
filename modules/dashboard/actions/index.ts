@@ -62,7 +62,8 @@ export const getAllPlaygroundForUser = async () => {
 
     return playground;
   } catch (error) {
-    console.log(error);
+    console.error('Error fetching playgrounds:', error);
+    return [];
   }
 };
 
@@ -71,24 +72,46 @@ export const createPlayground = async (data: {
   template: 'REACT' | 'NEXTJS' | 'EXPRESS' | 'VUE' | 'HONO' | 'ANGULAR';
   description?: string;
 }) => {
+  console.group('🆕 Server: Creating Playground');
+  console.log('1️⃣ Server received data:', data);
+
   const user = await currentUser();
+  console.log('2️⃣ User check:', {
+    hasUser: !!user,
+    userId: user?.id,
+    userEmail: user?.email,
+  });
+
+  if (!user || !user.id) {
+    console.error('3️⃣ ❌ FAILED: No authenticated user');
+    throw new Error('User authentication required');
+  }
 
   const { template, title, description } = data;
+  console.log('3️⃣ Processing playground data:', { template, title, description });
 
   try {
+    console.log('4️⃣ Creating playground in database...');
     const playground = await db.playground.create({
       data: {
         title: title,
         description: description,
         template: template,
-        userId: user?.id!,
+        userId: user.id,
       },
     });
 
+    console.log('5️⃣ ✅ SUCCESS: Playground created:', {
+      id: playground.id,
+      title: playground.title,
+      template: playground.template,
+    });
+    console.groupEnd();
     return playground;
   } catch (error) {
-    console.error('Error creating playground:', error);
-    throw new Error('Failed to create playground');
+    console.error('5️⃣ ❌ FAILED: Database error:', error);
+    console.groupEnd();
+    throw new Error(`Failed to create playground: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 };
 

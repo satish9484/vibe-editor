@@ -46,7 +46,9 @@ const AddNewButton = () => {
       console.groupEnd();
     } catch (error) {
       console.error('❌ ERROR: Failed to create playground:', error);
-      toast.error('Failed to create playground');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.log('❌ Error details:', { errorMessage, error });
+      toast.error(`Failed to create playground: ${errorMessage}`);
       console.groupEnd();
     }
   };
