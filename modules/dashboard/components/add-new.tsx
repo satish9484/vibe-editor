@@ -26,10 +26,29 @@ const AddNewButton = () => {
   }) => {
     setSelectedTemplate(data);
 
-    const res = await createPlayground(data);
-    toast.success('Playground Created successfully');
-    setIsModalOpen(false);
-    router.push(`/playground/${res?.id}`);
+    try {
+      console.group('🆕 Creating New Playground');
+      console.log('1️⃣ Playground data:', data);
+
+      const res = await createPlayground(data);
+      console.log('2️⃣ Playground created:', res);
+
+      if (!res || !res.id) {
+        console.error('3️⃣ ❌ FAILED: No playground ID returned');
+        toast.error('Failed to create playground - no ID returned');
+        return;
+      }
+
+      console.log('3️⃣ ✅ SUCCESS: Navigating to playground', { id: res.id });
+      toast.success('Playground Created successfully');
+      setIsModalOpen(false);
+      router.push(`/playground/${res.id}`);
+      console.groupEnd();
+    } catch (error) {
+      console.error('❌ ERROR: Failed to create playground:', error);
+      toast.error('Failed to create playground');
+      console.groupEnd();
+    }
   };
 
   return (

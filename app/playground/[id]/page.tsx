@@ -19,7 +19,7 @@ import WebContainerPreview from '@/modules/webcontainers/components/webcontainer
 import { useWebContainer } from '@/modules/webcontainers/hooks/useWebContainer';
 import { AlertCircle, FileText, FolderOpen, RefreshCw, Save, Settings, X } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 const MainPlaygroundPage = () => {
@@ -100,7 +100,6 @@ const MainPlaygroundPage = () => {
     hasRetryInitialization: !!retryInitialization,
   });
 
-  const lastSyncedContent = useRef<Map<string, string>>(new Map());
   console.log('8️⃣ Component initialization complete');
   console.groupEnd();
 
@@ -157,21 +156,6 @@ const MainPlaygroundPage = () => {
     [handleRenameFolder, saveTemplateData]
   );
 
-  console.group('🔍 Array Operations Check');
-  console.log('9️⃣ Before array operations:', {
-    openFiles: openFiles,
-    openFilesType: typeof openFiles,
-    isArray: Array.isArray(openFiles),
-    activeFileId: activeFileId,
-  });
-
-  const activeFile = openFiles?.find(file => file.id === activeFileId);
-  console.log('🔟 Active file found:', { activeFile: activeFile });
-
-  const hasUnsavedChanges = openFiles?.some(file => file.hasUnsavedChanges) || false;
-  console.log('1️⃣1️⃣ Unsaved changes check:', { hasUnsavedChanges });
-  console.groupEnd();
-
   const handleFileSelect = (file: TemplateFile) => {
     openFile(file);
   };
@@ -202,60 +186,83 @@ const MainPlaygroundPage = () => {
         }
 
         const updatedTemplateData = JSON.parse(JSON.stringify(latestTemplateData));
-
-        // Define a proper type for template items
-        type TemplateItem = {
-          folderName?: string;
-          filename?: string;
-          fileExtension?: string;
-          content?: string;
-          items?: TemplateItem[];
-        };
-
-        const updateFileContent = (items: TemplateItem[]): TemplateItem[] =>
-          items.map((item: TemplateItem) => {
-            if ('folderName' in item) {
-              return { ...item, items: updateFileContent(item.items || []) };
-            } else if (item.filename === fileToSave.filename && item.fileExtension === fileToSave.fileExtension) {
-              return { ...item, content: fileToSave.content };
-            }
-            return item;
-          });
-        updatedTemplateData.items = updateFileContent(updatedTemplateData.items);
-
-        // Sync with WebContainer
-        if (writeFileSync) {
-          await writeFileSync(filePath, fileToSave.content);
-          lastSyncedContent.current.set(fileToSave.id, fileToSave.content);
-          if (instance && instance.fs) {
-            await instance.fs.writeFile(filePath, fileToSave.content);
-          }
-        }
-
         await saveTemplateData(updatedTemplateData);
-        setTemplateData(updatedTemplateData);
-        // Update open files
-        const updatedOpenFiles = (openFiles || []).map(f =>
-          f.id === targetFileId
-            ? {
-                ...f,
-                content: fileToSave.content,
-                originalContent: fileToSave.content,
-                hasUnsavedChanges: false,
-              }
-            : f
-        );
+        await writeFileSync!(filePath, fileToSave.content);
+
+        const updatedOpenFiles = (openFiles || []).map(f => (f.id === targetFileId ? { ...f, hasUnsavedChanges: false } : f));
         setOpenFiles(updatedOpenFiles);
 
-        toast.success(`Saved ${fileToSave.filename}.${fileToSave.fileExtension}`);
+        toast.success('File saved successfully');
       } catch (error) {
         console.error('Error saving file:', error);
-        toast.error(`Failed to save ${fileToSave.filename}.${fileToSave.fileExtension}`);
-        throw error;
+        toast.error('Failed to save file');
       }
     },
-    [activeFileId, openFiles, writeFileSync, instance, saveTemplateData, setTemplateData, setOpenFiles]
+    [activeFileId, openFiles, writeFileSync, saveTemplateData, setOpenFiles]
   );
+
+  const handleResetEnvironment = useCallback(async () => {
+    try {
+      if (retryInitialization) {
+        toast.info('Resetting WebContainer environment...');
+        await retryInitialization();
+        toast.success('Environment reset successfully');
+      } else {
+        toast.error('Reset functionality not available');
+      }
+    } catch (error) {
+      console.error('Error resetting environment:', error);
+      toast.error('Failed to reset environment');
+    }
+  }, [retryInitialization]);
+
+  useEffect(() => {
+    if (templateData && instance) {
+      // setupContainer will be handled by WebContainerPreview component
+      console.log('Template data and instance available for setup');
+    }
+  }, [templateData, instance]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        handleSave();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleSave]);
+
+  // Add safety check for undefined ID after all hooks
+  if (!id || id === 'undefined') {
+    console.error('❌ ERROR: Invalid playground ID:', { id });
+    return (
+      <div className='flex flex-col items-center justify-center h-[calc(100vh-4rem)] p-4'>
+        <AlertCircle className='h-12 w-12 text-red-500 mb-4' />
+        <h2 className='text-xl font-semibold text-red-600 mb-2'>Invalid Playground</h2>
+        <p className='text-gray-600 mb-4'>The playground ID is invalid or missing.</p>
+        <Button onClick={() => (window.location.href = '/dashboard')} variant='destructive'>
+          Go to Dashboard
+        </Button>
+      </div>
+    );
+  }
+
+  console.group('🔍 Array Operations Check');
+  console.log('9️⃣ Before array operations:', {
+    openFiles: openFiles,
+    openFilesType: typeof openFiles,
+    isArray: Array.isArray(openFiles),
+    activeFileId: activeFileId,
+  });
+
+  const activeFile = openFiles?.find(file => file.id === activeFileId);
+  console.log('🔟 Active file found:', { activeFile: activeFile });
+
+  const hasUnsavedChanges = openFiles?.some(file => file.hasUnsavedChanges) || false;
+  console.log('1️⃣1️⃣ Unsaved changes check:', { hasUnsavedChanges });
+  console.groupEnd();
 
   const handleSaveAll = async () => {
     console.group('💾 Handle Save All Flow');
@@ -299,32 +306,6 @@ const MainPlaygroundPage = () => {
     }
     console.groupEnd();
   };
-
-  const handleResetEnvironment = useCallback(async () => {
-    try {
-      if (retryInitialization) {
-        toast.info('Resetting WebContainer environment...');
-        retryInitialization();
-        toast.success('Environment reset successfully');
-      } else {
-        toast.error('Reset function not available');
-      }
-    } catch (error) {
-      console.error('Error resetting environment:', error);
-      toast.error('Failed to reset environment');
-    }
-  }, [retryInitialization]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === 's') {
-        e.preventDefault();
-        handleSave();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleSave]);
 
   if (error) {
     return (
