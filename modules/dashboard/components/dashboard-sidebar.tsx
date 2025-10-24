@@ -56,12 +56,32 @@ const lucideIconMap: Record<string, LucideIcon> = {
   // Add any other icons you might use dynamically
 };
 
-export function DashboardSidebar({ initialPlaygroundData }: { initialPlaygroundData: PlaygroundData[] }) {
+export function DashboardSidebar({ initialPlaygroundData }: { initialPlaygroundData?: PlaygroundData[] }) {
   const pathname = usePathname();
-  // Add null check to prevent filter error
+
+  console.group('🎯 DashboardSidebar Component');
+  console.log('1️⃣ DashboardSidebar props:', {
+    initialPlaygroundData: initialPlaygroundData,
+    hasInitialData: !!initialPlaygroundData,
+    isArray: Array.isArray(initialPlaygroundData),
+    dataLength: initialPlaygroundData?.length || 0,
+  });
+
+  // Add comprehensive null check to prevent filter error
   const safePlaygroundData = initialPlaygroundData || [];
+  console.log('2️⃣ Safe playground data:', {
+    safeData: safePlaygroundData,
+    safeDataLength: safePlaygroundData.length,
+  });
+
   const [starredPlaygrounds, setStarredPlaygrounds] = useState(safePlaygroundData.filter(p => p.starred));
   const [recentPlaygrounds, setRecentPlaygrounds] = useState(safePlaygroundData);
+
+  console.log('3️⃣ State initialized:', {
+    starredCount: starredPlaygrounds.length,
+    recentCount: recentPlaygrounds.length,
+  });
+  console.groupEnd();
 
   return (
     <Sidebar variant='inset' collapsible='icon' className='border-1 border-r'>
@@ -102,10 +122,10 @@ export function DashboardSidebar({ initialPlaygroundData }: { initialPlaygroundD
           </SidebarGroupAction>
           <SidebarGroupContent>
             <SidebarMenu>
-              {starredPlaygrounds.length === 0 && recentPlaygrounds.length === 0 ? (
+              {(starredPlaygrounds?.length || 0) === 0 && (recentPlaygrounds?.length || 0) === 0 ? (
                 <div className='text-center text-muted-foreground py-4 w-full'>Create your playground</div>
               ) : (
-                starredPlaygrounds.map(playground => {
+                (starredPlaygrounds || []).map(playground => {
                   const IconComponent = lucideIconMap[playground.icon] || Code2;
                   return (
                     <SidebarMenuItem key={playground.id}>
@@ -133,9 +153,9 @@ export function DashboardSidebar({ initialPlaygroundData }: { initialPlaygroundD
           </SidebarGroupAction>
           <SidebarGroupContent>
             <SidebarMenu>
-              {starredPlaygrounds.length === 0 && recentPlaygrounds.length === 0
+              {(starredPlaygrounds?.length || 0) === 0 && (recentPlaygrounds?.length || 0) === 0
                 ? null
-                : recentPlaygrounds.map(playground => {
+                : (recentPlaygrounds || []).map(playground => {
                     const IconComponent = lucideIconMap[playground.icon] || Code2;
                     return (
                       <SidebarMenuItem key={playground.id}>
