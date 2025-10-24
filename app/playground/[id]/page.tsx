@@ -23,12 +23,30 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 const MainPlaygroundPage = () => {
+  console.group('🎮 MainPlaygroundPage Initialization');
+  console.log('1️⃣ Component mounted');
+
   const { id } = useParams<{ id: string }>();
+  console.log('2️⃣ URL params:', { id });
+
   const [isPreviewVisible, setIsPreviewVisible] = useState(true);
+  console.log('3️⃣ Preview visibility state:', { isPreviewVisible });
 
   const { playgroundData, templateData, isLoading, error, saveTemplateData } = usePlayground(id);
+  console.log('4️⃣ Playground data:', {
+    hasPlaygroundData: !!playgroundData,
+    hasTemplateData: !!templateData,
+    isLoading: isLoading,
+    hasError: !!error,
+    errorMessage: error,
+  });
 
   const aiSuggestions = useAISuggestions();
+  console.log('5️⃣ AI suggestions:', {
+    isEnabled: aiSuggestions.isEnabled,
+    isLoading: aiSuggestions.isLoading,
+    hasSuggestion: !!aiSuggestions.suggestion,
+  });
 
   const {
     setTemplateData,
@@ -50,6 +68,14 @@ const MainPlaygroundPage = () => {
     updateFileContent,
   } = useFileExplorer();
 
+  console.log('6️⃣ File explorer state:', {
+    activeFileId: activeFileId,
+    openFilesCount: openFiles?.length || 0,
+    openFiles: openFiles,
+    hasOpenFiles: !!openFiles,
+    isOpenFilesArray: Array.isArray(openFiles),
+  });
+
   const {
     serverUrl,
     isLoading: containerLoading,
@@ -62,7 +88,21 @@ const MainPlaygroundPage = () => {
     // @ts-expect-error - useWebContainer hook type mismatch
   } = useWebContainer({ templateData });
 
+  console.log('7️⃣ WebContainer state:', {
+    serverUrl: serverUrl,
+    containerLoading: containerLoading,
+    hasContainerError: !!containerError,
+    containerErrorMessage: containerError,
+    hasInstance: !!instance,
+    hasWriteFileSync: !!writeFileSync,
+    retryCount: retryCount,
+    isRetrying: isRetrying,
+    hasRetryInitialization: !!retryInitialization,
+  });
+
   const lastSyncedContent = useRef<Map<string, string>>(new Map());
+  console.log('8️⃣ Component initialization complete');
+  console.groupEnd();
 
   useEffect(() => {
     setPlaygroundId(id);
@@ -117,8 +157,20 @@ const MainPlaygroundPage = () => {
     [handleRenameFolder, saveTemplateData]
   );
 
+  console.group('🔍 Array Operations Check');
+  console.log('9️⃣ Before array operations:', {
+    openFiles: openFiles,
+    openFilesType: typeof openFiles,
+    isArray: Array.isArray(openFiles),
+    activeFileId: activeFileId,
+  });
+
   const activeFile = openFiles?.find(file => file.id === activeFileId);
+  console.log('🔟 Active file found:', { activeFile: activeFile });
+
   const hasUnsavedChanges = openFiles?.some(file => file.hasUnsavedChanges) || false;
+  console.log('1️⃣1️⃣ Unsaved changes check:', { hasUnsavedChanges });
+  console.groupEnd();
 
   const handleFileSelect = (file: TemplateFile) => {
     openFile(file);
@@ -206,25 +258,46 @@ const MainPlaygroundPage = () => {
   );
 
   const handleSaveAll = async () => {
+    console.group('💾 Handle Save All Flow');
+    console.log('1️⃣ Save All Request:', {
+      openFiles: openFiles,
+      openFilesType: typeof openFiles,
+      isArray: Array.isArray(openFiles),
+      openFilesLength: openFiles?.length || 0,
+    });
+
     // Add null check to prevent filter error
     if (!openFiles || !Array.isArray(openFiles)) {
+      console.log('1️⃣ ❌ BLOCKED: No files available to save');
       toast.error('No files available to save');
+      console.groupEnd();
       return;
     }
 
+    console.log('2️⃣ ✅ PROCEEDING: Filtering unsaved files');
     const unsavedFiles = openFiles.filter(f => f.hasUnsavedChanges);
+    console.log('2️⃣ Filter result:', {
+      unsavedFilesCount: unsavedFiles.length,
+      unsavedFiles: unsavedFiles,
+    });
 
     if (unsavedFiles.length === 0) {
+      console.log('3️⃣ ℹ️ No unsaved changes');
       toast.info('No unsaved changes');
+      console.groupEnd();
       return;
     }
 
     try {
+      console.log('4️⃣ 💾 Saving all files...');
       await Promise.all(unsavedFiles.map(f => handleSave(f.id)));
       toast.success(`Saved ${unsavedFiles.length} file(s)`);
+      console.log('4️⃣ ✅ SUCCESS: All files saved');
     } catch {
+      console.log('4️⃣ ❌ FAILED: Some files failed to save');
       toast.error('Failed to save some files');
     }
+    console.groupEnd();
   };
 
   const handleResetEnvironment = useCallback(async () => {
