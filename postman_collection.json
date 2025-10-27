@@ -1,0 +1,137 @@
+{
+  "info": {
+    "name": "Vibe Editor - Code Completion API",
+    "description": "API collection for testing code completion with Vercel (HuggingFace) and Local (Ollama)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Local Development (Ollama)",
+      "item": [
+        {
+          "name": "Post Code Completion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileContent\": \"import React from 'react'\\n\\nconst MyComponent = () => {\\n  return (\\n    <div>\\n      {/* TODO: Add content */}\",\n  \"cursorLine\": 5,\n  \"cursorColumn\": 15,\n  \"suggestionType\": \"function\",\n  \"fileName\": \"MyComponent.tsx\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url_local}}/api/code-completion",
+              "host": ["{{base_url_local}}"],
+              "path": ["api", "code-completion"]
+            }
+          }
+        },
+        {
+          "name": "Post Code Completion - TypeScript",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileContent\": \"interface User {\\n  name: string;\\n  age: number;\\n}\\n\\nconst getUser = (id: string): User => {\\n  // TODO: Implement function\",\n  \"cursorLine\": 6,\n  \"cursorColumn\": 23,\n  \"suggestionType\": \"function\",\n  \"fileName\": \"user.ts\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url_local}}/api/code-completion",
+              "host": ["{{base_url_local}}"],
+              "path": ["api", "code-completion"]
+            }
+          }
+        },
+        {
+          "name": "Post Code Completion - Python",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileContent\": \"def calculate_total(items):\\n  \\\"\\\"\\\"Calculate total price of items\\\"\\\"\\\"\\n  total = 0\\n  for item in items:\\n    // TODO: Add price calculation\",\n  \"cursorLine\": 4,\n  \"cursorColumn\": 20,\n  \"suggestionType\": \"statement\",\n  \"fileName\": \"calculator.py\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url_local}}/api/code-completion",
+              "host": ["{{base_url_local}}"],
+              "path": ["api", "code-completion"]
+            }
+          }
+        },
+        {
+          "name": "Post Code Completion - Streaming Mode",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileContent\": \"import React from 'react'\\n\\nconst MyComponent = () => {\\n  return (\\n    <div>\\n      {/* TODO: Add content */}\",\n  \"cursorLine\": 5,\n  \"cursorColumn\": 15,\n  \"suggestionType\": \"function\",\n  \"fileName\": \"MyComponent.tsx\",\n  \"stream\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url_local}}/api/code-completion",
+              "host": ["{{base_url_local}}"],
+              "path": ["api", "code-completion"]
+            },
+            "description": "Streaming mode shows real-time output as it's generated. Watch the response in Postman to see the text appear character by character."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Production (Vercel + HuggingFace)",
+      "item": [
+        {
+          "name": "Post Code Completion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileContent\": \"import React from 'react'\\n\\nconst MyComponent = () => {\\n  return (\\n    <div>\\n      {/* TODO: Add content */}\",\n  \"cursorLine\": 5,\n  \"cursorColumn\": 15,\n  \"suggestionType\": \"function\",\n  \"fileName\": \"MyComponent.tsx\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url_vercel}}/api/code-completion",
+              "host": ["{{base_url_vercel}}"],
+              "path": ["api", "code-completion"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url_local",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "base_url_vercel",
+      "value": "https://your-app.vercel.app",
+      "type": "string"
+    }
+  ]
+}

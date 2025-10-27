@@ -1,11 +1,15 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
+// Extend timeout to 10 minutes for Ollama API calls
+export const maxDuration = 600; // 10 minutes in seconds
+
 interface CodeSuggestionRequest {
   fileContent: string;
   cursorLine: number;
   cursorColumn: number;
   suggestionType: string;
   fileName?: string;
+  stream?: boolean; // Optional: enable streaming mode for real-time updates
 }
 
 interface CodeContext {
@@ -27,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     console.log('body', body);
 
-    const { fileContent, cursorLine, cursorColumn, suggestionType, fileName } = body;
+    const { fileContent, cursorLine, cursorColumn, suggestionType, fileName, stream } = body;
 
     // Validate input
     if (!fileContent || cursorLine < 0 || cursorColumn < 0 || !suggestionType) {
@@ -37,6 +41,34 @@ export async function POST(request: NextRequest) {
     const context = analyzeCodeContext(fileContent, cursorLine, cursorColumn, fileName);
 
     const prompt = buildPrompt(context, suggestionType);
+
+    // Handle streaming mode
+    if (stream) {
+      return new Response(
+        new ReadableStream({
+          async start(controller) {
+            try {
+              const suggestion = await generateSuggestion(prompt);
+              const chunks = suggestion.split('');
+              for (const chunk of chunks) {
+                controller.enqueue(new TextEncoder().encode(chunk));
+                await new Promise(resolve => setTimeout(resolve, 10)); // Small delay for streaming effect
+              }
+              controller.close();
+            } catch (error) {
+              controller.error(error);
+            }
+          },
+        }),
+        {
+          headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            Connection: 'keep-alive',
+          },
+        }
+      );
+    }
 
     const suggestion = await generateSuggestion(prompt);
 
@@ -58,7 +90,10 @@ export async function POST(request: NextRequest) {
     let statusCode = 500;
 
     if (error instanceof Error) {
-      if (error.message?.includes('AI service error')) {
+      if (error.message?.includes('timed out')) {
+        errorMessage = 'Request timed out. The AI service may be overloaded.';
+        statusCode = 504;
+      } else if (error.message?.includes('AI service error')) {
         errorMessage = 'AI service temporarily unavailable';
         statusCode = 503;
       } else if (error.message?.includes('fetch')) {
@@ -144,34 +179,56 @@ Generate suggestion:`;
 }
 
 async function generateSuggestion(prompt: string): Promise<string> {
+  console.group('🎯 generateSuggestion - Starting AI Generation');
   try {
     // Check if we're running on Vercel (production) or local development
     const isVercel = Boolean(process.env.VERCEL);
     const huggingFaceApiKey = process.env.HUGGINGFACE_API_KEY;
 
+    console.log('Environment Detection:');
+    console.log('  - isVercel:', isVercel);
+    console.log('  - hasHuggingFaceKey:', !!huggingFaceApiKey);
+    console.log('  - prompt length:', prompt.length, 'characters');
+    console.log('  - prompt preview:', prompt.substring(0, 100) + '...');
+
+    let result: string;
     if (isVercel && huggingFaceApiKey) {
       // Use Hugging Face for Vercel deployment
-      return await generateWithHuggingFace(prompt, huggingFaceApiKey);
+      console.log('🔵 Using HuggingFace API (Vercel)');
+      result = await generateWithHuggingFace(prompt, huggingFaceApiKey);
     } else if (!isVercel) {
       // Use Ollama for local development
-      return await generateWithOllama(prompt);
+      console.log('🟢 Using Ollama API (Local)');
+      result = await generateWithOllama(prompt);
     } else {
       // Fallback: return empty suggestion if no AI service available
-      return '';
+      console.warn('⚠️ No AI service available - returning empty suggestion');
+      result = '';
     }
+
+    console.log('✅ Generation successful');
+    console.log('  - suggestion length:', result.length, 'characters');
+    console.log('  - suggestion preview:', result.substring(0, 100));
+    console.groupEnd();
+    return result;
   } catch (error: unknown) {
-    console.error('AI generation error:', error);
+    console.error('❌ AI generation error:', error);
 
     // Provide more specific error messages for different error types
+    let errorMsg: string;
     if (error instanceof TypeError && error.message.includes('fetch')) {
-      throw new Error('Unable to connect to AI service. Please check your network connection.');
+      errorMsg = 'Unable to connect to AI service. Please check your network connection.';
     } else if (error instanceof Error && error.message?.includes('AI model not found')) {
-      throw new Error('AI model not found. Please check if the model is installed.');
+      errorMsg = 'AI model not found. Please check if the model is installed.';
     } else if (error instanceof Error && error.message?.includes('AI service')) {
-      throw error; // Re-throw AI-specific errors
+      errorMsg = error.message; // Re-throw AI-specific errors
     } else {
-      throw new Error('AI suggestion generation failed. Please try again.');
+      errorMsg = 'AI suggestion generation failed. Please try again.';
     }
+
+    console.error('Final error message:', errorMsg);
+    console.groupEnd();
+    throw new Error(errorMsg);
   }
 }
 
@@ -260,13 +317,39 @@ async function generateWithOllama(prompt: string): Promise<string> {
 
     console.log('Using Ollama for code completion:', JSON.stringify(requestBody, null, 2));
 
-    const response = await fetch(`${ollamaUrl}/api/generate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody),
-    });
+    // Create AbortController for timeout handling
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10 * 60 * 1000); // 10 minute timeout
 
-    console.log('Ollama response:', response);
+    console.log('🔄 Sending request to Ollama (may take 5-10 minutes)...');
+    const startTime = Date.now();
+
+    // Start progress tracking
+    const progressInterval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const minutes = Math.floor(elapsed / 60);
+      const seconds = elapsed % 60;
+      process.stdout.write(`\r⏳ Waiting for Ollama response... [${minutes}:${seconds.toString().padStart(2, '0')}]`);
+    }, 1000); // Update every second
+
+    let response;
+    try {
+      response = await fetch(`${ollamaUrl}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+        signal: controller.signal,
+      });
+    } finally {
+      clearInterval(progressInterval);
+      clearTimeout(timeoutId);
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      console.log(`\r✅ Ollama response received in ${elapsed}s: ${response?.status} ${response?.statusText}`);
+    }
+
+    if (!response) {
+      throw new Error('No response received from Ollama');
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -297,6 +380,12 @@ async function generateWithOllama(prompt: string): Promise<string> {
     return suggestion;
   } catch (error) {
     console.error('Ollama generation error:', error);
+
+    // Handle specific timeout errors
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Ollama request timed out after 10 minutes. The model may be slow or overloaded.');
+    }
+
     throw new Error(`Ollama API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
