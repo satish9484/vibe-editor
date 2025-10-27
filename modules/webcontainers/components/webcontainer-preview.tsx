@@ -47,6 +47,48 @@ const WebContainerPreview = ({
   const [isSetupInProgress, setIsSetupInProgress] = useState(false);
 
   const terminalRef = useRef<any>(null);
+  const serverProcessRef = useRef<any>(null);
+
+  // Function to stop the development server
+  const stopServer = useCallback(() => {
+    console.group('🛑 Stop Server Flow');
+    console.log('1️⃣ Stop Request:', {
+      hasServerProcess: !!serverProcessRef.current,
+      isSetupComplete: isSetupComplete,
+    });
+
+    if (serverProcessRef.current) {
+      console.log('2️⃣ 🛑 Stopping server process');
+      try {
+        serverProcessRef.current.kill();
+        console.log('2️⃣ ✅ Server process killed successfully');
+        if (terminalRef.current?.writeToTerminal) {
+          terminalRef.current.writeToTerminal('🛑 Development server stopped\r\n');
+        }
+      } catch (error) {
+        console.log('2️⃣ ⚠️ Error stopping server process:', error);
+      }
+      serverProcessRef.current = null;
+    } else {
+      console.log('2️⃣ ℹ️ No server process to stop');
+    }
+
+    // Reset states
+    setPreviewUrl('');
+    setIsSetupComplete(false);
+    setLoadingState({
+      transforming: false,
+      mounting: false,
+      installing: false,
+      starting: false,
+      ready: false,
+    });
+    setCurrentStep(0);
+    setSetupError(null);
+
+    console.log('3️⃣ ✅ SUCCESS: Server stopped and states reset');
+    console.groupEnd();
+  }, [isSetupComplete]);
 
   // Function to detect and get appropriate start command
   const getStartCommand = useCallback(async (instance: any) => {
@@ -306,7 +348,8 @@ const WebContainerPreview = ({
         }
 
         const startProcess = await instance.spawn(startCommand.command, startCommand.args);
-        console.log('8️⃣ 🚀 Server process spawned');
+        serverProcessRef.current = startProcess;
+        console.log('8️⃣ 🚀 Server process spawned and stored');
 
         instance.on('server-ready', (port: number, url: string) => {
           console.log('9️⃣ 🌐 Server ready event received:', { port, url });
@@ -373,8 +416,33 @@ const WebContainerPreview = ({
   }, [instance, templateData, isSetupComplete, isSetupInProgress]);
 
   useEffect(() => {
-    return () => {};
+    return () => {
+      // Cleanup server process on unmount
+      if (serverProcessRef.current) {
+        console.log('🧹 CLEANUP: Stopping server process on unmount');
+        try {
+          serverProcessRef.current.kill();
+        } catch (error) {
+          console.log('⚠️ CLEANUP: Error stopping server process:', error);
+        }
+        serverProcessRef.current = null;
+      }
+    };
   }, []);
+
+  // Keyboard shortcut to stop server (Ctrl+C)
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.key === 'c' && isSetupComplete) {
+        event.preventDefault();
+        console.log('⌨️ Keyboard shortcut: Ctrl+C pressed - stopping server');
+        stopServer();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSetupComplete, stopServer]);
 
   if (isLoading) {
     return (
@@ -461,7 +529,21 @@ const WebContainerPreview = ({
 
           {/* Terminal */}
           <div className='flex-1 p-4'>
-            <TerminalComponent ref={terminalRef} webContainerInstance={instance} theme='dark' className='h-full' />
+            <div className='h-full flex flex-col'>
+              <div className='flex justify-between items-center mb-2'>
+                <h3 className='text-sm font-medium text-gray-700 dark:text-gray-300'>Terminal</h3>
+                {isSetupComplete && (
+                  <button
+                    onClick={stopServer}
+                    title='Stop development server (Ctrl+C)'
+                    className='text-sm bg-red-100 dark:bg-red-800 px-3 py-1 rounded hover:bg-red-200 dark:hover:bg-red-700 transition-colors'
+                  >
+                    🛑 Stop Server
+                  </button>
+                )}
+              </div>
+              <TerminalComponent ref={terminalRef} webContainerInstance={instance} theme='dark' className='flex-1' />
+            </div>
           </div>
         </div>
       ) : (
@@ -471,7 +553,19 @@ const WebContainerPreview = ({
           </div>
 
           <div className='h-64 border-t'>
-            <TerminalComponent ref={terminalRef} webContainerInstance={instance} theme='dark' className='h-full' />
+            <div className='h-full flex flex-col'>
+              <div className='flex justify-between items-center p-2 border-b'>
+                <h3 className='text-sm font-medium text-gray-700 dark:text-gray-300'>Terminal</h3>
+                <button
+                  onClick={stopServer}
+                  title='Stop development server (Ctrl+C)'
+                  className='text-sm bg-red-100 dark:bg-red-800 px-3 py-1 rounded hover:bg-red-200 dark:hover:bg-red-700 transition-colors'
+                >
+                  🛑 Stop Server
+                </button>
+              </div>
+              <TerminalComponent ref={terminalRef} webContainerInstance={instance} theme='dark' className='flex-1' />
+            </div>
           </div>
         </div>
       )}

@@ -295,7 +295,12 @@ const MainPlaygroundPage = () => {
   });
 
   const activeFile = openFiles?.find(file => file.id === activeFileId);
-  console.log('🔟 Active file found:', { activeFile: activeFile });
+  console.log('🔟 Active file found:', {
+    activeFile: activeFile,
+    hasActiveFile: !!activeFile,
+    activeFileId: activeFileId,
+    openFilesCount: openFiles?.length || 0,
+  });
 
   const hasUnsavedChanges = openFiles?.some(file => file.hasUnsavedChanges) || false;
   console.log('1️⃣1️⃣ Unsaved changes check:', { hasUnsavedChanges });
@@ -418,7 +423,7 @@ const MainPlaygroundPage = () => {
               <div className='flex items-center gap-1'>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button size='sm' variant='outline' onClick={() => handleSave()} disabled={!activeFile || !activeFile.hasUnsavedChanges}>
+                    <Button size='sm' variant='outline' onClick={() => handleSave()} disabled={!activeFile || !activeFile?.hasUnsavedChanges}>
                       <Save className='h-4 w-4' />
                     </Button>
                   </TooltipTrigger>

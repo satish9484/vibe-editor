@@ -15,14 +15,9 @@ framework templates, and intelligent code completion.
 
 ## 📸 Demo
 
-> **Add your demo GIF/screenshot here**
+> **screenshots**
 >
-> Place your demo video/GIF in the `public/` directory and update this section
-> with:
->
-> ```markdown
-> ![Demo](public/demo.gif)
-> ```
+> ![Screenshot 1](public/VB_2.png) ![Screenshot 2](public/VB_3.png)
 
 ## ✨ Features
 

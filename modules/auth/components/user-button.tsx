@@ -1,12 +1,11 @@
 'use client';
-import React from 'react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { LogOut, User } from 'lucide-react';
-import LogoutButton from './logout-button';
 import { useCurrentUser } from '../hooks/use-current-user';
+import LogoutButton from './logout-button';
 
 const UserButton = () => {
   const user = useCurrentUser();
@@ -16,7 +15,7 @@ const UserButton = () => {
       <DropdownMenuTrigger>
         <div className={cn('relative rounded-full')}>
           <Avatar>
-            <AvatarImage src={user?.image!} alt={user?.name!} />
+            <AvatarImage src={user?.image || ''} alt={user?.name || 'User'} />
             <AvatarFallback className='bg-red-500'>
               <User className='text-white' />
             </AvatarFallback>

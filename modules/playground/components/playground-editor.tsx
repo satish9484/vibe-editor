@@ -1,9 +1,16 @@
 'use client';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import Editor, { type Monaco } from '@monaco-editor/react';
 import { useCallback, useEffect, useRef } from 'react';
 import { configureMonaco, defaultEditorOptions, getEditorLanguage } from '../lib/editor-config';
 import { TemplateFile } from '../lib/path-to-json';
+
+// Type definitions for Monaco Editor
+type MonacoEditor = any; // Monaco editor instance
+type MonacoCompletionProvider = any; // Monaco completion provider
+type MonacoCommand = any; // Monaco command
 
 interface PlaygroundEditorProps {
   activeFile: TemplateFile | undefined;
@@ -12,7 +19,7 @@ interface PlaygroundEditorProps {
   suggestion: string | null;
   suggestionLoading: boolean;
   suggestionPosition: { line: number; column: number } | null;
-  onAcceptSuggestion: (editor: any, monaco: any) => void;
+  onAcceptSuggestion: (editor: any, monaco: Monaco) => void;
   onRejectSuggestion: (editor: any) => void;
   onTriggerSuggestion: (type: string, editor: any) => void;
 }
@@ -28,9 +35,9 @@ export const PlaygroundEditor = ({
   onRejectSuggestion,
   onTriggerSuggestion,
 }: PlaygroundEditorProps) => {
-  const editorRef = useRef<any>(null);
+  const editorRef = useRef<MonacoEditor | null>(null);
   const monacoRef = useRef<Monaco | null>(null);
-  const inlineCompletionProviderRef = useRef<any>(null);
+  const inlineCompletionProviderRef = useRef<MonacoCompletionProvider | null>(null);
   const currentSuggestionRef = useRef<{
     text: string;
     position: { line: number; column: number };
@@ -39,7 +46,7 @@ export const PlaygroundEditor = ({
   const isAcceptingSuggestionRef = useRef(false);
   const suggestionAcceptedRef = useRef(false);
   const suggestionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const tabCommandRef = useRef<any>(null);
+  const tabCommandRef = useRef<MonacoCommand | null>(null);
 
   // Generate unique ID for each suggestion
   const generateSuggestionId = () => `suggestion-${Date.now()}-${Math.random()}`;
@@ -364,7 +371,7 @@ export const PlaygroundEditor = ({
     };
   }, [suggestion, suggestionPosition, activeFile, createInlineCompletionProvider]);
 
-  const handleEditorDidMount = (editor: any, monaco: Monaco) => {
+  const handleEditorDidMount = (editor: MonacoEditor, monaco: Monaco) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
     console.log('Editor instance mounted:', !!editorRef.current);
@@ -402,7 +409,7 @@ export const PlaygroundEditor = ({
     });
 
     // CRITICAL: Override Tab key with high priority and prevent default Monaco behavior
-    if (tabCommandRef.current) {
+    if (tabCommandRef.current && typeof tabCommandRef.current.dispose === 'function') {
       tabCommandRef.current.dispose();
     }
 
@@ -546,7 +553,7 @@ export const PlaygroundEditor = ({
     updateEditorLanguage();
   };
 
-  const updateEditorLanguage = () => {
+  const updateEditorLanguage = useCallback(() => {
     if (!activeFile || !monacoRef.current || !editorRef.current) return;
     const model = editorRef.current.getModel();
     if (!model) return;
@@ -557,11 +564,11 @@ export const PlaygroundEditor = ({
     } catch (error) {
       console.warn('Failed to set editor language:', error);
     }
-  };
+  }, [activeFile]);
 
   useEffect(() => {
     updateEditorLanguage();
-  }, [activeFile]);
+  }, [activeFile, updateEditorLanguage]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -577,7 +584,7 @@ export const PlaygroundEditor = ({
         inlineCompletionProviderRef.current.dispose();
         inlineCompletionProviderRef.current = null;
       }
-      if (tabCommandRef.current) {
+      if (tabCommandRef.current && typeof tabCommandRef.current.dispose === 'function') {
         tabCommandRef.current.dispose();
         tabCommandRef.current = null;
       }
@@ -608,8 +615,7 @@ export const PlaygroundEditor = ({
         onChange={value => onContentChange(value || '')}
         onMount={handleEditorDidMount}
         language={activeFile ? getEditorLanguage(activeFile.fileExtension || '') : 'plaintext'}
-        // @ts-ignore
-        options={defaultEditorOptions}
+        options={defaultEditorOptions as any}
       />
     </div>
   );

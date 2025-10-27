@@ -1,8 +1,8 @@
-import Image from 'next/image';
 import Link from 'next/link';
+import Image from 'next/image';
 // import { ThemeToggle } from "@/components/ui/toggle-theme";
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import UserButton from '../auth/components/user-button';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 export function Header() {
   return (
@@ -31,7 +31,7 @@ export function Header() {
                 {/* Logo Section with Navigation Links */}
                 <div className='flex items-center gap-6 justify-center'>
                   <Link href='/' className='flex items-center gap-2 justify-center'>
-                    <Image src={'/logo.svg'} alt='Logo' height={60} width={60} style={{ width: 'auto', height: 'auto' }} priority />
+                    <Image src={'/logo.svg'} alt='Logo' height={60} width={60} />
 
                     <span className='hidden sm:block font-extrabold text-lg'>VibeCode Editor</span>
                   </Link>
@@ -39,10 +39,10 @@ export function Header() {
                   {/* Desktop Navigation Links */}
                   <div className='hidden sm:flex items-center gap-4'>
                     <Link
-                      href='/dashboard'
+                      href='/docs/components/background-paths'
                       className='text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors'
                     >
-                      Dashboard
+                      Docs
                     </Link>
                     {/* <Link
                                             href="/pricing"
