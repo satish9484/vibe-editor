@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
-// Extend timeout to 10 minutes for Ollama API calls
-export const maxDuration = 600; // 10 minutes in seconds
+// Runtime configuration for Vercel and standalone
+export const runtime = 'nodejs';
+export const maxDuration = 300; // 5 minutes - compatible with Vercel hobby plan
 
 interface CodeSuggestionRequest {
   fileContent: string;

@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Runtime configuration
+export const runtime = 'nodejs';
+export const maxDuration = 300; // 5 minutes - compatible with Vercel hobby plan
+
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;

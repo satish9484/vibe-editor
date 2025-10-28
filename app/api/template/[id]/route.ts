@@ -1,9 +1,12 @@
-import { readTemplateStructureFromJson, saveTemplateStructureToJson } from '@/modules/playground/lib/path-to-json';
 import { db } from '@/lib/db';
 import { templatePaths } from '@/lib/template';
-import path from 'path';
+import { readTemplateStructureFromJson, saveTemplateStructureToJson } from '@/modules/playground/lib/path-to-json';
 import fs from 'fs/promises';
 import { NextRequest } from 'next/server';
+import path from 'path';
+
+// Runtime configuration
+export const runtime = 'nodejs';
 
 function validateJsonStructure(data: unknown): boolean {
   try {
