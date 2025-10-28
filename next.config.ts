@@ -13,10 +13,23 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
-    // Disable COOP/COEP headers for HTTP (localhost/hostname)
-    // These headers are only needed for SharedArrayBuffer and are ignored on HTTP
-    // They cause browser warnings when accessed via hostname or HTTP
-    return [];
+    // Enable cross-origin isolation headers for WebContainer (SharedArrayBuffer)
+    // Required for WebContainer API to work in production
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin',
+          },
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'require-corp',
+          },
+        ],
+      },
+    ];
   },
   reactStrictMode: true,
   experimental: {
