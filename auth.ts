@@ -1,16 +1,16 @@
-import NextAuth from 'next-auth';
 import { PrismaAdapter } from '@auth/prisma-adapter';
+import NextAuth from 'next-auth';
 
 import authConfig from './auth.config';
 import { db } from './lib/db';
-import { getAccountByUserId, getUserById } from './modules/auth/actions';
+import { getUserById } from './modules/auth/actions';
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   callbacks: {
     /**
      * Handle user creation and account linking after a successful sign-in
      */
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account }) {
       if (!user || !account) return false;
 
       // Check if the user already exists
@@ -27,7 +27,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             image: user.image,
 
             accounts: {
-              // @ts-ignore
+              // @ts-expect-error - Prisma nested create type mismatch
               create: {
                 type: account.type,
                 provider: account.provider,
@@ -70,7 +70,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
               tokenType: account.token_type,
               scope: account.scope,
               idToken: account.id_token,
-              // @ts-ignore
+              // @ts-expect-error - Prisma nested create type mismatch
               sessionState: account.session_state,
             },
           });
@@ -80,13 +80,11 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       return true;
     },
 
-    async jwt({ token, user, account }) {
+    async jwt({ token }) {
       if (!token.sub) return token;
       const existingUser = await getUserById(token.sub);
 
       if (!existingUser) return token;
-
-      const exisitingAccount = await getAccountByUserId(existingUser.id);
 
       token.name = existingUser.name;
       token.email = existingUser.email;
@@ -112,5 +110,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   secret: process.env.AUTH_SECRET,
   adapter: PrismaAdapter(db),
   session: { strategy: 'jwt' },
+  // Smart trustHost: true for standalone/Docker, respect AUTH_URL for Vercel
+  // For production: Set AUTH_URL environment variable in Vercel
+  trustHost: process.env.VERCEL ? false : true,
   ...authConfig,
 });

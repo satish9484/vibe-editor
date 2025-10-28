@@ -1,7 +1,7 @@
 # 🐳 Docker Deployment Guide for VibeCode Editor
 
 > **For general project information, setup instructions, and features, see the
-> main [README.md](README.md)**
+> main [README.md](../README.md)**
 
 This guide will help you deploy VibeCode Editor using Docker with all services
 containerized.

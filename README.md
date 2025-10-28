@@ -369,7 +369,7 @@ if (isVercel && huggingFaceApiKey) {
 ## 🐳 Docker Deployment
 
 For detailed Docker deployment instructions, see
-[DOCKER-README.md](DOCKER-README.md).
+[docs/DOCKER-README.md](docs/DOCKER-README.md).
 
 ## 🚀 Vercel Deployment
 
@@ -469,6 +469,18 @@ docker-compose ps mongodb
 ```
 
 ## 📚 Additional Resources
+
+### Project Documentation
+
+- [📖 Docker Deployment Guide](docs/DOCKER-README.md) - Docker setup and
+  deployment
+- [🚀 Production Deployment Guide](docs/DEPLOYMENT.md) - Standalone & Vercel
+  deployment
+- [🧪 API Testing Guide](docs/API_TESTING_GUIDE.md) - Testing API endpoints
+- [📈 Progress Tracking Guide](docs/PROGRESS_TRACKING_GUIDE.md) - Development
+  progress
+
+### External Resources
 
 - [Next.js Documentation](https://nextjs.org/docs)
 - [Monaco Editor](https://microsoft.github.io/monaco-editor/)

@@ -10,6 +10,7 @@ interface CodeSuggestionRequest {
   suggestionType: string;
   fileName?: string;
   stream?: boolean; // Optional: enable streaming mode for real-time updates
+  provider?: 'ollama' | 'huggingface'; // Optional: force a specific provider
 }
 
 interface CodeContext {
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     console.log('body', body);
 
-    const { fileContent, cursorLine, cursorColumn, suggestionType, fileName, stream } = body;
+    const { fileContent, cursorLine, cursorColumn, suggestionType, fileName, stream, provider } = body;
 
     // Validate input
     if (!fileContent || cursorLine < 0 || cursorColumn < 0 || !suggestionType) {
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
         new ReadableStream({
           async start(controller) {
             try {
-              const suggestion = await generateSuggestion(prompt);
+              const suggestion = await generateSuggestion(prompt, provider);
               const chunks = suggestion.split('');
               for (const chunk of chunks) {
                 controller.enqueue(new TextEncoder().encode(chunk));
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const suggestion = await generateSuggestion(prompt);
+    const suggestion = await generateSuggestion(prompt, provider);
 
     return NextResponse.json({
       suggestion,
@@ -178,7 +179,7 @@ Instructions:
 Generate suggestion:`;
 }
 
-async function generateSuggestion(prompt: string): Promise<string> {
+async function generateSuggestion(prompt: string, requestedProvider?: 'ollama' | 'huggingface'): Promise<string> {
   console.group('🎯 generateSuggestion - Starting AI Generation');
   try {
     // Check if we're running on Vercel (production) or local development
@@ -188,20 +189,46 @@ async function generateSuggestion(prompt: string): Promise<string> {
     console.log('Environment Detection:');
     console.log('  - isVercel:', isVercel);
     console.log('  - hasHuggingFaceKey:', !!huggingFaceApiKey);
+    console.log('  - requestedProvider:', requestedProvider || 'auto');
     console.log('  - prompt length:', prompt.length, 'characters');
     console.log('  - prompt preview:', prompt.substring(0, 100) + '...');
 
     let result: string;
-    if (isVercel && huggingFaceApiKey) {
-      // Use Hugging Face for Vercel deployment
-      console.log('🔵 Using HuggingFace API (Vercel)');
-      result = await generateWithHuggingFace(prompt, huggingFaceApiKey);
-    } else if (!isVercel) {
-      // Use Ollama for local development
-      console.log('🟢 Using Ollama API (Local)');
-      result = await generateWithOllama(prompt);
+
+    // Provider configuration for more maintainable selection
+    const providerMatrix: {
+      match: () => boolean;
+      action: () => Promise<string>;
+      log: string;
+    }[] = [
+      {
+        match: () => requestedProvider === 'huggingface' && !!huggingFaceApiKey,
+        action: async () => await generateWithHuggingFace(prompt, huggingFaceApiKey!),
+        log: '🔵 Using HuggingFace API (Requested)',
+      },
+      {
+        match: () => requestedProvider === 'ollama',
+        action: async () => await generateWithOllama(prompt),
+        log: '🟢 Using Ollama API (Requested)',
+      },
+      {
+        match: () => isVercel && !!huggingFaceApiKey,
+        action: async () => await generateWithHuggingFace(prompt, huggingFaceApiKey!),
+        log: '🔵 Using HuggingFace API (Vercel)',
+      },
+      {
+        match: () => !isVercel,
+        action: async () => await generateWithOllama(prompt),
+        log: '🟢 Using Ollama API (Local - Default)',
+      },
+    ];
+
+    const matchedProvider = providerMatrix.find(p => p.match());
+
+    if (matchedProvider) {
+      console.log(matchedProvider.log);
+      result = await matchedProvider.action();
     } else {
-      // Fallback: return empty suggestion if no AI service available
       console.warn('⚠️ No AI service available - returning empty suggestion');
       result = '';
     }

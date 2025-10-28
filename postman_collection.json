@@ -96,6 +96,75 @@
       ]
     },
     {
+      "name": "Local Testing - HuggingFace",
+      "item": [
+        {
+          "name": "Force HuggingFace Provider",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileContent\": \"import React from 'react'\\n\\nconst MyComponent = () => {\\n  return (\\n    <div>\\n      {/* TODO: Add content */}\",\n  \"cursorLine\": 5,\n  \"cursorColumn\": 15,\n  \"suggestionType\": \"function\",\n  \"fileName\": \"MyComponent.tsx\",\n  \"provider\": \"huggingface\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url_local}}/api/code-completion",
+              "host": ["{{base_url_local}}"],
+              "path": ["api", "code-completion"]
+            },
+            "description": "Tests HuggingFace API locally. Requires HUGGINGFACE_API_KEY in .env.local"
+          }
+        },
+        {
+          "name": "HuggingFace - TypeScript",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileContent\": \"interface User {\\n  name: string;\\n  age: number;\\n}\\n\\nconst getUser = (id: string): User => {\\n  // TODO: Implement\",\n  \"cursorLine\": 6,\n  \"cursorColumn\": 23,\n  \"suggestionType\": \"function\",\n  \"fileName\": \"user.ts\",\n  \"provider\": \"huggingface\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url_local}}/api/code-completion",
+              "host": ["{{base_url_local}}"],
+              "path": ["api", "code-completion"]
+            }
+          }
+        },
+        {
+          "name": "HuggingFace - Python",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileContent\": \"def calculate_total(items):\\n  \\\"\\\"\\\"Calculate total\\\"\\\"\\\"\\n  total = 0\\n  for item in items:\\n    \",\n  \"cursorLine\": 4,\n  \"cursorColumn\": 18,\n  \"suggestionType\": \"statement\",\n  \"fileName\": \"calculator.py\",\n  \"provider\": \"huggingface\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url_local}}/api/code-completion",
+              "host": ["{{base_url_local}}"],
+              "path": ["api", "code-completion"]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Production (Vercel + HuggingFace)",
       "item": [
         {
