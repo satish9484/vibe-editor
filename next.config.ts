@@ -13,25 +13,10 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
-    // Only apply COOP/COEP headers in HTTPS (production)
-    // These headers are ignored on HTTP and cause browser warnings
-    return process.env.NODE_ENV === 'production'
-      ? [
-          {
-            source: '/:path*',
-            headers: [
-              {
-                key: 'Cross-Origin-Opener-Policy',
-                value: 'same-origin',
-              },
-              {
-                key: 'Cross-Origin-Embedder-Policy',
-                value: 'require-corp',
-              },
-            ],
-          },
-        ]
-      : [];
+    // Disable COOP/COEP headers for HTTP (localhost/hostname)
+    // These headers are only needed for SharedArrayBuffer and are ignored on HTTP
+    // They cause browser warnings when accessed via hostname or HTTP
+    return [];
   },
   reactStrictMode: true,
   experimental: {
