@@ -110,8 +110,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   secret: process.env.AUTH_SECRET,
   adapter: PrismaAdapter(db),
   session: { strategy: 'jwt' },
-  // Smart trustHost: true for standalone/Docker, respect AUTH_URL for Vercel
-  // For production: Set AUTH_URL environment variable in Vercel
-  trustHost: process.env.VERCEL ? false : true,
+  // Trust host when AUTH_URL is set (for Vercel) or when not on Vercel (standalone/Docker)
+  // Vercel requires AUTH_URL to be set in environment variables
+  trustHost: true,
   ...authConfig,
 });
