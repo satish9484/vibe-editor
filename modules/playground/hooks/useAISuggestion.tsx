@@ -14,9 +14,13 @@ interface AISuggestionsState {
 
 interface UseAISuggestionsReturn extends AISuggestionsState {
   toggleEnabled: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fetchSuggestion: (type: string, editor: any) => Promise<void>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   acceptSuggestion: (editor: any, monaco: any) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   rejectSuggestion: (editor: any) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   clearSuggestion: (editor: any) => void;
 }
 
@@ -36,11 +40,12 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
     setState(prev => ({ ...prev, isEnabled: !prev.isEnabled }));
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const fetchSuggestion = useCallback(async (type: string, editor: any) => {
     setState(currentState => {
       // Guard: optionally require app readiness before requesting AI
-      // @ts-ignore
-      const appReady = typeof window !== 'undefined' && (window as any).__APP_READY === true;
+      // const appReady = typeof window !== 'undefined' && (window as any).__APP_READY === true;
+      const appReady = typeof window !== 'undefined'; // Allow AI without WebContainer for Vercel
       if (!appReady) {
         // Soft notice just once per session could be added if needed
         return currentState;
@@ -172,7 +177,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
               setState(prev => ({ ...prev, isLoading: false }));
             }
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('❌ ERROR: Error fetching code suggestion:', error);
           // Show error toast for network/connection issues
           const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -209,7 +214,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
     return () => {};
   }, []);
 
-  const acceptSuggestion = useCallback(() => {
+  const acceptSuggestion = useCallback(
     (editor: any, monaco: any) => {
       setState(currentState => {
         if (!currentState.suggestion || !currentState.position || !editor || !monaco) {
@@ -238,24 +243,29 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
           decoration: [],
         };
       });
-    };
-  }, []);
+    },
+    [setState]
+  );
 
-  const rejectSuggestion = useCallback((editor: any) => {
-    setState(currentState => {
-      if (editor && currentState.decoration.length > 0) {
-        editor.deltaDecorations(currentState.decoration, []);
-      }
+  const rejectSuggestion = useCallback(
+    (editor: any) => {
+      setState(currentState => {
+        if (editor && currentState.decoration.length > 0) {
+          editor.deltaDecorations(currentState.decoration, []);
+        }
 
-      return {
-        ...currentState,
-        suggestion: null,
-        position: null,
-        decoration: [],
-      };
-    });
-  }, []);
+        return {
+          ...currentState,
+          suggestion: null,
+          position: null,
+          decoration: [],
+        };
+      });
+    },
+    [setState]
+  );
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const clearSuggestion = useCallback((editor: any) => {
     setState(currentState => {
       if (editor && currentState.decoration.length > 0) {

@@ -264,7 +264,7 @@ async function generateWithHuggingFace(prompt: string, apiKey: string): Promise<
   try {
     console.log('Using Hugging Face API for code completion');
 
-    const response = await fetch('https://api-inference.huggingface.co/models/microsoft/CodeBERT-base', {
+    const response = await fetch('https://api-inference.huggingface.co/models/bigcode/starcoder2-15b', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -273,10 +273,11 @@ async function generateWithHuggingFace(prompt: string, apiKey: string): Promise<
       body: JSON.stringify({
         inputs: prompt,
         parameters: {
-          max_length: 300,
+          max_new_tokens: 150,
           temperature: 0.7,
           do_sample: true,
           top_p: 0.9,
+          return_full_text: false,
         },
       }),
     });
@@ -299,6 +300,8 @@ async function generateWithHuggingFace(prompt: string, apiKey: string): Promise<
 
     const data = await response.json();
 
+    console.log('Hugging Face response:', JSON.stringify(data).substring(0, 200));
+
     // Handle different response formats from Hugging Face
     let suggestion = '';
     if (Array.isArray(data) && data.length > 0) {
@@ -307,9 +310,20 @@ async function generateWithHuggingFace(prompt: string, apiKey: string): Promise<
       suggestion = data;
     } else if (data.generated_text) {
       suggestion = data.generated_text;
+    } else if (data[0]?.generated_text) {
+      suggestion = data[0].generated_text;
     }
 
-    // Clean up the suggestion
+    // If no suggestion found, return a generic one
+    if (!suggestion || suggestion.trim().length === 0) {
+      console.warn('No valid suggestion from Hugging Face, returning placeholder');
+      return '// Add your code here';
+    }
+
+    // Clean up the suggestion - remove the original prompt if present
+    suggestion = suggestion.replace(prompt, '').trim();
+
+    // Remove code blocks if present
     if (suggestion.includes('```')) {
       const codeMatch = suggestion.match(/```[\w]*\n?([\s\S]*?)```/);
       suggestion = codeMatch ? codeMatch[1].trim() : suggestion;
