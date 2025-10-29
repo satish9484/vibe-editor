@@ -1,35 +1,42 @@
-const fs = require('fs');
-const path = require('path');
+import { copyFileSync, existsSync, mkdirSync, readdirSync, statSync } from 'fs';
+import { join } from 'path';
 
-const standaloneDir = path.join(__dirname, '..', '.next', 'standalone');
-const publicDir = path.join(__dirname, '..', 'public');
-const destPublicDir = path.join(standaloneDir, 'public');
+const projectRoot = join(__dirname, '..');
+const standaloneDir = join(projectRoot, '.next', 'standalone');
+const publicDir = join(projectRoot, 'public');
+const destPublicDir = join(standaloneDir, 'public');
 
-if (fs.existsSync(standaloneDir)) {
-  console.log('Copying public folder to standalone build...');
-
-  // Ensure public directory exists in standalone
-  if (!fs.existsSync(destPublicDir)) {
-    fs.mkdirSync(destPublicDir, { recursive: true });
-  }
-
-  // Copy files recursively
-  function copyRecursive(src, dest) {
-    const stat = fs.statSync(src);
-    if (stat.isDirectory()) {
-      if (!fs.existsSync(dest)) {
-        fs.mkdirSync(dest, { recursive: true });
-      }
-      fs.readdirSync(src).forEach(file => {
-        copyRecursive(path.join(src, file), path.join(dest, file));
-      });
-    } else {
-      fs.copyFileSync(src, dest);
+function copyRecursive(src, dest) {
+  const stat = statSync(src);
+  if (stat.isDirectory()) {
+    if (!existsSync(dest)) {
+      mkdirSync(dest, { recursive: true });
     }
+    for (const entry of readdirSync(src)) {
+      copyRecursive(join(src, entry), join(dest, entry));
+    }
+  } else {
+    copyFileSync(src, dest);
+  }
+}
+
+try {
+  if (!existsSync(publicDir)) {
+    console.log('Public folder not found; skipping copy');
+    process.exit(0);
+  }
+  if (!existsSync(standaloneDir)) {
+    console.log('.next/standalone not found; skipping public copy (non-standalone build)');
+    process.exit(0);
   }
 
+  console.log('Copying public folder to .next/standalone/public ...');
+  if (!existsSync(destPublicDir)) {
+    mkdirSync(destPublicDir, { recursive: true });
+  }
   copyRecursive(publicDir, destPublicDir);
   console.log('✅ Public folder copied successfully');
-} else {
-  console.log('⚠️ Standalone directory not found, skipping public copy');
+} catch (err) {
+  console.error('Failed to copy public folder:', err);
+  process.exit(1);
 }

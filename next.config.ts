@@ -1,9 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // Disable standalone for Vercel (Vercel handles static files natively)
-  // For self-hosted deployments, use: BUILD_STANDALONE=true npm run build
-  // output: 'standalone', // Uncomment for standalone builds
+  output: 'standalone',
   images: {
     remotePatterns: [
       {
@@ -56,15 +54,6 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   } as NextConfig['experimental'],
-
-  // Copy environment files to standalone build
-  outputFileTracingIncludes: {
-    '/': ['.env.local', '.env'],
-  },
-  // Copy public folder to standalone output
-  outputFileTracingExcludes: {
-    '/': ['node_modules/**/*'],
-  },
 };
 
 export default nextConfig;
