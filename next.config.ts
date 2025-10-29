@@ -1,7 +1,9 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
+  // Only use standalone for Docker/self-hosted deployments
+  // For Vercel, leave it commented out so Vercel handles static files natively
+  output: process.env.DOCKER_BUILD === 'true' ? 'standalone' : undefined,
   images: {
     remotePatterns: [
       {
