@@ -1,7 +1,7 @@
 interface TemplateItem {
-  filename: string;
-  fileExtension: string;
-  content: string;
+  filename?: string;
+  fileExtension?: string;
+  content?: string;
   folderName?: string;
   items?: TemplateItem[];
 }
@@ -20,7 +20,7 @@ interface WebContainerDirectory {
 
 type WebContainerFileSystem = Record<string, WebContainerFile | WebContainerDirectory>;
 
-export function transformToWebContainerFormat(template: { folderName: string; items: TemplateItem[] }): WebContainerFileSystem {
+export function transformToWebContainerFormat(template: { folderName: string; items: any[] }): WebContainerFileSystem {
   if (!template || !template.items || !Array.isArray(template.items)) {
     throw new Error('Invalid template data: template must have items array');
   }
@@ -45,7 +45,7 @@ export function transformToWebContainerFormat(template: { folderName: string; it
         }
 
         try {
-          const key = subItem.fileExtension ? `${subItem.filename}.${subItem.fileExtension}` : subItem.folderName!;
+          const key = subItem.fileExtension && subItem.filename ? `${subItem.filename}.${subItem.fileExtension}` : subItem.folderName;
 
           if (!key) {
             console.warn(`Skipping item with no filename/folderName at index ${index} in directory "${item.folderName}"`);
@@ -98,7 +98,7 @@ export function transformToWebContainerFormat(template: { folderName: string; it
         itemsCount: item.items?.length,
       });
 
-      const key = item.fileExtension ? `${item.filename}.${item.fileExtension}` : item.folderName!;
+      const key = item.fileExtension && item.filename ? `${item.filename}.${item.fileExtension}` : item.folderName;
 
       if (!key) {
         console.warn(`Skipping item with no filename/folderName at index ${index} in root template`, {

@@ -48,7 +48,7 @@ const WebContainerPreview = ({
 
   const terminalRef = useRef<any>(null);
   const serverProcessRef = useRef<any>(null);
-  const serverReadyListenerRef = useRef<(() => void) | null>(null);
+  const serverReadyListenerRef = useRef<((port: number, url: string) => void) | null>(null);
   const isManuallyStoppedRef = useRef<boolean>(false);
 
   // Function to stop the development server
