@@ -1,7 +1,9 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
+  // Disable standalone for Vercel (Vercel handles static files natively)
+  // Uncomment the line below for self-hosted deployments
+  output: process.env.BUILD_STANDALONE === 'true' ? 'standalone' : undefined,
   images: {
     remotePatterns: [
       {
@@ -38,7 +40,11 @@ const nextConfig: NextConfig = {
 
   // Copy environment files to standalone build
   outputFileTracingIncludes: {
-    '/*': ['.env.local', '.env'],
+    '/': ['.env.local', '.env'],
+  },
+  // Copy public folder to standalone output
+  outputFileTracingExcludes: {
+    '/': ['node_modules/**/*'],
   },
 };
 

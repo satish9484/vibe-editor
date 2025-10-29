@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev --turbopack --port 3000",
     "build": "next build",
-    "build:standalone": "npm run build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/",
+    "build:standalone": "npm run build && npm run copy-public",
+    "copy-public": "node scripts/copy-public.js",
     "start": "node .next/standalone/server.js",
     "start:prod": "cross-env NODE_ENV=production node .next/standalone/server.js",
     "lint": "next lint",
