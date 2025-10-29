@@ -2,8 +2,8 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   // Disable standalone for Vercel (Vercel handles static files natively)
-  // Uncomment the line below for self-hosted deployments
-  output: process.env.BUILD_STANDALONE === 'true' ? 'standalone' : undefined,
+  // For self-hosted deployments, use: BUILD_STANDALONE=true npm run build
+  // output: 'standalone', // Uncomment for standalone builds
   images: {
     remotePatterns: [
       {
@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     // Enable cross-origin isolation headers for WebContainer (SharedArrayBuffer)
-    // Required for WebContainer API to work in production
+    // Using credentialless COEP instead of require-corp to avoid breaking static assets
     return [
       {
         source: '/:path*',
@@ -27,7 +27,26 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Cross-Origin-Embedder-Policy',
-            value: 'require-corp',
+            value: 'credentialless',
+          },
+        ],
+      },
+      // Allow loading of public assets
+      {
+        source: '/favicon.ico',
+        headers: [
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
+          },
+        ],
+      },
+      {
+        source: '/:path*\\.(svg|png|jpg|jpeg|webp|ico)',
+        headers: [
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
           },
         ],
       },
