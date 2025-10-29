@@ -78,6 +78,8 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
             cursorLine: cursorPosition.lineNumber - 1,
             cursorColumn: cursorPosition.column - 1,
             suggestionType: type,
+            stream: false,
+            provider: 'huggingface',
           };
 
           console.log('1️⃣ Request Payload:', {
@@ -151,10 +153,10 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
               position: `${cursorPosition.lineNumber}:${cursorPosition.column}`,
             });
 
-            // Show success toast
+            // Show success toast with clear instructions
             toast.success('AI Suggestion Generated', {
-              description: 'Press Tab to accept the suggestion',
-              duration: 3000,
+              description: 'Press Tab to accept • Press Escape to reject',
+              duration: 5000,
             });
 
             setState(prev => ({

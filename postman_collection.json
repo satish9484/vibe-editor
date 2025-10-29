@@ -168,7 +168,7 @@
       "name": "Production (Vercel + HuggingFace)",
       "item": [
         {
-          "name": "Post Code Completion",
+          "name": "Post Code Completion - React",
           "request": {
             "method": "POST",
             "header": [
@@ -179,7 +179,29 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"fileContent\": \"import React from 'react'\\n\\nconst MyComponent = () => {\\n  return (\\n    <div>\\n      {/* TODO: Add content */}\",\n  \"cursorLine\": 5,\n  \"cursorColumn\": 15,\n  \"suggestionType\": \"function\",\n  \"fileName\": \"MyComponent.tsx\"\n}"
+              "raw": "{\n  \"fileContent\": \"import { useState } from 'react'\\nimport reactLogo from './assets/react.svg'\\nimport viteLogo from '/vite.svg'\\nimport './App.css'\\n\\nfunction App() {\\n  const [count, setCount] = useState(0)\\n\\n  return (\\n    <>\\n      <div>\\n        <a href=\\\"https://vite.dev\\\" target=\\\"_blank\\\">\\n          <img src={viteLogo} className=\\\"logo\\\" alt=\\\"Vite logo\\\" />\\n        </a>\\n        <a href=\\\"https://react.dev\\\" target=\\\"_blank\\\">\\n          <img src={reactLogo} className=\\\"logo react\\\" alt=\\\"React logo\\\" />\\n        </a>\\n      </div>\\n      <h1>Vite + React</h1>\\n      <div className=\\\"card\\\">\\n        <button onClick={() => setCount((count) => count + 1)}>\\n          count is {count}\\n        </button>\\n        <p>\\n\\n        \\n          Edit <code>src/App.tsx</code> and save to test HMR\\n        </p>\\n      </div>\\n      <p className=\\\"read-the-docs\\\">\\n        Click on the Vite and React logos to learn more\\n      </p>\\n    </>\\n  )\\n}\\n\\nexport default App\\n\",\n  \"cursorLine\": 16,\n  \"cursorColumn\": 12,\n  \"suggestionType\": \"completion\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url_vercel}}/api/code-completion",
+              "host": ["{{base_url_vercel}}"],
+              "path": ["api", "code-completion"]
+            },
+            "description": "Test React code completion on Vercel with HuggingFace StarCoder2 model"
+          }
+        },
+        {
+          "name": "Post Code Completion - TypeScript",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileContent\": \"interface User {\\n  name: string;\\n  age: number;\\n}\\n\\nconst getUser = (id: string): User => {\",\n  \"cursorLine\": 6,\n  \"cursorColumn\": 23,\n  \"suggestionType\": \"function\",\n  \"fileName\": \"user.ts\"\n}"
             },
             "url": {
               "raw": "{{base_url_vercel}}/api/code-completion",

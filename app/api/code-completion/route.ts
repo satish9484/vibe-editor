@@ -1,3 +1,4 @@
+import { InferenceClient } from '@huggingface/inference';
 import { type NextRequest, NextResponse } from 'next/server';
 
 // Runtime configuration for Vercel and standalone
@@ -31,7 +32,9 @@ export async function POST(request: NextRequest) {
   try {
     const body: CodeSuggestionRequest = await request.json();
 
+    /* Commented out: Debug logging - uncomment to see request body
     console.log('body', body);
+    */
 
     const { fileContent, cursorLine, cursorColumn, suggestionType, fileName, stream, provider } = body;
 
@@ -73,6 +76,7 @@ export async function POST(request: NextRequest) {
     }
 
     const suggestion = await generateSuggestion(prompt, provider);
+    console.log('suggestion', suggestion);
 
     return NextResponse.json({
       suggestion,
@@ -85,17 +89,24 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: unknown) {
-    console.error('Context analysis error:', error);
+    console.error('❌ Context analysis error:', error);
 
     // Provide more specific error messages based on error type
     let errorMessage = 'Internal server error';
     let statusCode = 500;
 
     if (error instanceof Error) {
+      // Enhanced error logging
+      console.error('Error details:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack?.substring(0, 300),
+      });
+
       if (error.message?.includes('timed out')) {
         errorMessage = 'Request timed out. The AI service may be overloaded.';
         statusCode = 504;
-      } else if (error.message?.includes('AI service error')) {
+      } else if (error.message?.includes('AI service error') || error.message?.includes('Hugging Face')) {
         errorMessage = 'AI service temporarily unavailable';
         statusCode = 503;
       } else if (error.message?.includes('fetch')) {
@@ -181,18 +192,27 @@ Generate suggestion:`;
 }
 
 async function generateSuggestion(prompt: string, requestedProvider?: 'ollama' | 'huggingface'): Promise<string> {
+  /* Commented out: Group logging - uncomment to see detailed generation flow
   console.group('🎯 generateSuggestion - Starting AI Generation');
+  */
   try {
     // Check if we're running on Vercel (production) or local development
     const isVercel = Boolean(process.env.VERCEL);
     const huggingFaceApiKey = process.env.HUGGINGFACE_API_KEY;
 
+    /* Commented out: Environment detection logs - uncomment for debugging
     console.log('Environment Detection:');
     console.log('  - isVercel:', isVercel);
     console.log('  - hasHuggingFaceKey:', !!huggingFaceApiKey);
     console.log('  - requestedProvider:', requestedProvider || 'auto');
     console.log('  - prompt length:', prompt.length, 'characters');
     console.log('  - prompt preview:', prompt.substring(0, 100) + '...');
+    */
+
+    // Validate HuggingFace API key if explicitly requested
+    if (requestedProvider === 'huggingface' && !huggingFaceApiKey) {
+      throw new Error('HUGGINGFACE_API_KEY is not available. Please set it in your environment variables.');
+    }
 
     let result: string;
 
@@ -213,31 +233,42 @@ async function generateSuggestion(prompt: string, requestedProvider?: 'ollama' |
         log: '🟢 Using Ollama API (Requested)',
       },
       {
-        match: () => isVercel && !!huggingFaceApiKey,
+        match: () => !!huggingFaceApiKey, // Prefer HuggingFace if available (works everywhere)
         action: async () => await generateWithHuggingFace(prompt, huggingFaceApiKey!),
-        log: '🔵 Using HuggingFace API (Vercel)',
+        log: '🔵 Using HuggingFace API (Available)',
       },
       {
         match: () => !isVercel,
         action: async () => await generateWithOllama(prompt),
-        log: '🟢 Using Ollama API (Local - Default)',
+        log: '🟢 Using Ollama API (Fallback)',
       },
     ];
 
     const matchedProvider = providerMatrix.find(p => p.match());
 
     if (matchedProvider) {
-      console.log(matchedProvider.log);
+      // Commented out: Provider selection log - uncomment to see which provider is used
+      // console.log(matchedProvider.log);
       result = await matchedProvider.action();
     } else {
-      console.warn('⚠️ No AI service available - returning empty suggestion');
-      result = '';
+      console.error('❌ No AI service available');
+
+      // Provide helpful error message based on environment
+      if (isVercel) {
+        throw new Error('HUGGINGFACE_API_KEY is not set. Please configure it in Vercel environment variables.');
+      } else {
+        throw new Error('No AI service available. Please set either HUGGINGFACE_API_KEY or ensure Ollama is running.');
+      }
     }
 
+    /* Commented out: Success logs - uncomment to see generation details
     console.log('✅ Generation successful');
     console.log('  - suggestion length:', result.length, 'characters');
     console.log('  - suggestion preview:', result.substring(0, 100));
+    */
+    /* Commented out: Group end - uncomment with group start
     console.groupEnd();
+    */
     return result;
   } catch (error: unknown) {
     console.error('❌ AI generation error:', error);
@@ -248,6 +279,9 @@ async function generateSuggestion(prompt: string, requestedProvider?: 'ollama' |
       errorMsg = 'Unable to connect to AI service. Please check your network connection.';
     } else if (error instanceof Error && error.message?.includes('AI model not found')) {
       errorMsg = 'AI model not found. Please check if the model is installed.';
+    } else if (error instanceof Error && error.message?.includes('HUGGINGFACE_API_KEY')) {
+      // Preserve specific API key error messages
+      errorMsg = error.message;
     } else if (error instanceof Error && error.message?.includes('AI service')) {
       errorMsg = error.message; // Re-throw AI-specific errors
     } else {
@@ -255,82 +289,122 @@ async function generateSuggestion(prompt: string, requestedProvider?: 'ollama' |
     }
 
     console.error('Final error message:', errorMsg);
+    /* Commented out: Group end - uncomment with group start
     console.groupEnd();
+    */
     throw new Error(errorMsg);
   }
 }
 
 async function generateWithHuggingFace(prompt: string, apiKey: string): Promise<string> {
   try {
-    console.log('Using Hugging Face API for code completion');
+    /* Commented out: HuggingFace initialization log - uncomment to see API calls
+    console.log('Using HuggingFace InferenceClient for code completion');
+    */
 
-    const response = await fetch('https://api-inference.huggingface.co/models/bigcode/starcoder2-15b', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        inputs: prompt,
-        parameters: {
-          max_new_tokens: 150,
+    // Initialize HuggingFace Inference client
+    const client = new InferenceClient(apiKey);
+
+    // List of models that support text generation
+    const models = [
+      'deepseek-ai/DeepSeek-V3-0324', // New DeepSeek V3 model (excellent performance)
+      'bigcode/starcoder2-15b', // Best all-rounder (15B params)
+      'bigcode/starcoder2-7b', // Faster 7B version
+      'bigcode/starcoder2-3b', // Smallest & fastest 3B version
+      'bigcode/starcoder', // Original StarCoder
+      'Salesforce/codegen-350M-mono', // Small reliable model
+    ];
+
+    // Try models in order until one works
+    let lastError: Error | null = null;
+
+    for (let i = 0; i < models.length; i++) {
+      const modelName = models[i];
+      /* Commented out: Model attempt logs - uncomment to see model fallback
+      console.log(`Attempting model ${i + 1}/${models.length}: ${modelName}`);
+      */
+
+      try {
+        // Use chatCompletion API (more reliable and modern)
+        const chatCompletion = await client.chatCompletion({
+          model: modelName,
+          messages: [
+            {
+              role: 'user',
+              content: prompt,
+            },
+          ],
+          max_tokens: 150,
           temperature: 0.7,
-          do_sample: true,
           top_p: 0.9,
-          return_full_text: false,
-        },
-      }),
-    });
+        });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Hugging Face error response:', errorText);
+        /* Commented out: Response received log - uncomment to see API responses
+        console.log('Hugging Face response received');
+        */
 
-      let errorMessage = `Hugging Face API error: ${response.statusText}`;
-      if (response.status === 401) {
-        errorMessage = 'Invalid Hugging Face API key. Please check your credentials.';
-      } else if (response.status === 429) {
-        errorMessage = 'Hugging Face API rate limit exceeded. Please try again later.';
-      } else if (response.status === 503) {
-        errorMessage = 'Hugging Face model is loading. Please try again in a moment.';
+        // Extract generated text from response
+        let suggestion = '';
+        if (chatCompletion.choices && chatCompletion.choices.length > 0) {
+          const message = chatCompletion.choices[0].message;
+          if (message && message.content) {
+            suggestion = message.content;
+          }
+        }
+
+        // If no suggestion found, try next model or return placeholder
+        if (!suggestion || suggestion.trim().length === 0) {
+          if (i < models.length - 1) {
+            /* Commented out: Fallback logs - uncomment to see model switching
+            console.warn(`Model ${modelName} returned empty response, trying next...`);
+            */
+            lastError = new Error(`Model ${modelName} returned empty response`);
+            continue;
+          }
+          /* Commented out: Placeholder log - uncomment to see when placeholders are returned
+          console.warn('No valid suggestion from any model, returning placeholder');
+          */
+          return '// Add your code here';
+        }
+
+        // Clean up the suggestion - remove the original prompt if present
+        suggestion = suggestion.replace(prompt, '').trim();
+
+        // Remove code blocks if present
+        if (suggestion.includes('```')) {
+          const codeMatch = suggestion.match(/```[\w]*\n?([\s\S]*?)```/);
+          suggestion = codeMatch ? codeMatch[1].trim() : suggestion;
+        }
+
+        /* Commented out: Success log - uncomment to see successful generations
+        console.log(`✅ Successfully generated suggestion using model: ${modelName}`);
+        */
+        return suggestion.trim();
+      } catch (error) {
+        /* Commented out: Model failure log - ERROR logs are still active
+        console.error(`Model ${modelName} failed:`, error);
+        */
+
+        if (i < models.length - 1) {
+          /* Commented out: Fallback attempt log - uncomment to see model retries
+          console.warn(`Trying next model...`);
+          */
+          lastError = error instanceof Error ? error : new Error(String(error));
+          continue;
+        }
+        throw error;
       }
-
-      throw new Error(errorMessage);
     }
 
-    const data = await response.json();
-
-    console.log('Hugging Face response:', JSON.stringify(data).substring(0, 200));
-
-    // Handle different response formats from Hugging Face
-    let suggestion = '';
-    if (Array.isArray(data) && data.length > 0) {
-      suggestion = data[0].generated_text || data[0].text || '';
-    } else if (typeof data === 'string') {
-      suggestion = data;
-    } else if (data.generated_text) {
-      suggestion = data.generated_text;
-    } else if (data[0]?.generated_text) {
-      suggestion = data[0].generated_text;
+    // If we get here, all models failed
+    if (lastError) {
+      throw new Error(`All models failed. Last error: ${lastError.message}`);
     }
-
-    // If no suggestion found, return a generic one
-    if (!suggestion || suggestion.trim().length === 0) {
-      console.warn('No valid suggestion from Hugging Face, returning placeholder');
-      return '// Add your code here';
-    }
-
-    // Clean up the suggestion - remove the original prompt if present
-    suggestion = suggestion.replace(prompt, '').trim();
-
-    // Remove code blocks if present
-    if (suggestion.includes('```')) {
-      const codeMatch = suggestion.match(/```[\w]*\n?([\s\S]*?)```/);
-      suggestion = codeMatch ? codeMatch[1].trim() : suggestion;
-    }
-
-    return suggestion.trim();
+    throw new Error('No models available to use.');
   } catch (error) {
+    /* ERROR LOG - Always active for debugging
+    console.error('Hugging Face generation error:', error);
+    */
     console.error('Hugging Face generation error:', error);
     throw new Error(`Hugging Face API error: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
@@ -338,7 +412,8 @@ async function generateWithHuggingFace(prompt: string, apiKey: string): Promise<
 
 async function generateWithOllama(prompt: string): Promise<string> {
   try {
-    const ollamaUrl = process.env.OLLAMA_HOST || 'http://ollama:11434';
+    // Prefer localhost for local development, fall back to Docker hostname
+    const ollamaUrl = process.env.OLLAMA_HOST || 'http://localhost:11434';
     const requestBody = {
       // Current working model (lightweight, ~637MB)
       model: 'tinyllama',
@@ -357,13 +432,17 @@ async function generateWithOllama(prompt: string): Promise<string> {
       },
     };
 
+    /* Commented out: Ollama request log - uncomment to see request details
     console.log('Using Ollama for code completion:', JSON.stringify(requestBody, null, 2));
+    */
 
     // Create AbortController for timeout handling
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10 * 60 * 1000); // 10 minute timeout
 
+    /* Commented out: Ollama progress log - uncomment to see request status
     console.log('🔄 Sending request to Ollama (may take 5-10 minutes)...');
+    */
     const startTime = Date.now();
 
     // Start progress tracking
@@ -385,8 +464,10 @@ async function generateWithOllama(prompt: string): Promise<string> {
     } finally {
       clearInterval(progressInterval);
       clearTimeout(timeoutId);
+      /* Commented out: Ollama response log - uncomment to see response status and elapsed time
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
       console.log(`\r✅ Ollama response received in ${elapsed}s: ${response?.status} ${response?.statusText}`);
+      */
     }
 
     if (!response) {
@@ -395,6 +476,9 @@ async function generateWithOllama(prompt: string): Promise<string> {
 
     if (!response.ok) {
       const errorText = await response.text();
+      /* ERROR LOG - Always active for debugging
+      console.error('Ollama error response:', errorText);
+      */
       console.error('Ollama error response:', errorText);
 
       // Provide more specific error messages based on OLLAMA response
@@ -421,6 +505,9 @@ async function generateWithOllama(prompt: string): Promise<string> {
 
     return suggestion;
   } catch (error) {
+    /* ERROR LOG - Always active for debugging
+    console.error('Ollama generation error:', error);
+    */
     console.error('Ollama generation error:', error);
 
     // Handle specific timeout errors

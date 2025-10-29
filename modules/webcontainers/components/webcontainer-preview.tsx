@@ -51,26 +51,28 @@ const WebContainerPreview = ({
 
   // Function to stop the development server
   const stopServer = useCallback(() => {
+    /* Commented out: Stop server logs - uncomment to see stop flow
     console.group('🛑 Stop Server Flow');
     console.log('1️⃣ Stop Request:', {
       hasServerProcess: !!serverProcessRef.current,
       isSetupComplete: isSetupComplete,
     });
+    */
 
     if (serverProcessRef.current) {
-      console.log('2️⃣ 🛑 Stopping server process');
+      /* console.log('2️⃣ 🛑 Stopping server process'); */
       try {
         serverProcessRef.current.kill();
-        console.log('2️⃣ ✅ Server process killed successfully');
+        /* console.log('2️⃣ ✅ Server process killed successfully'); */
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal('🛑 Development server stopped\r\n');
         }
       } catch (error) {
-        console.log('2️⃣ ⚠️ Error stopping server process:', error);
+        console.error('⚠️ Error stopping server process:', error);
       }
       serverProcessRef.current = null;
     } else {
-      console.log('2️⃣ ℹ️ No server process to stop');
+      /* console.log('2️⃣ ℹ️ No server process to stop'); */
     }
 
     // Reset states
@@ -86,80 +88,82 @@ const WebContainerPreview = ({
     setCurrentStep(0);
     setSetupError(null);
 
-    console.log('3️⃣ ✅ SUCCESS: Server stopped and states reset');
-    console.groupEnd();
-  }, [isSetupComplete]);
+    /* console.log('3️⃣ ✅ SUCCESS: Server stopped and states reset');
+    console.groupEnd(); */
+  }, []);
 
   // Function to detect and get appropriate start command
   const getStartCommand = useCallback(async (instance: any) => {
+    /* Commented out: Start command detection logs - uncomment to see detection flow
     console.group('🔍 Start Command Detection Flow');
     console.log('1️⃣ Detection Started:', {
       hasInstance: !!instance,
     });
+    */
 
     try {
-      console.log('2️⃣ 📄 Reading package.json...');
+      /* console.log('2️⃣ 📄 Reading package.json...'); */
       // Try to read package.json to determine the correct start command
       const packageJsonContent = await instance.fs.readFile('package.json', 'utf8');
       const packageJson = JSON.parse(packageJsonContent);
-      console.log('2️⃣ ✅ package.json loaded successfully');
+      /* console.log('2️⃣ ✅ package.json loaded successfully');
 
       console.log('3️⃣ 🔍 Analyzing package.json:', {
         hasScripts: !!packageJson.scripts,
         scripts: packageJson.scripts,
         dependencies: Object.keys(packageJson.dependencies || {}),
-      });
+      }); */
 
       // Check for different start scripts
       if (packageJson.scripts) {
         if (packageJson.scripts.start) {
-          console.log('3️⃣ ✅ Found start script:', { command: 'npm', args: ['run', 'start'] });
-          console.groupEnd();
+          /* console.log('3️⃣ ✅ Found start script:', { command: 'npm', args: ['run', 'start'] });
+          console.groupEnd(); */
           return { command: 'npm', args: ['run', 'start'] };
         }
         if (packageJson.scripts.dev) {
-          console.log('3️⃣ ✅ Found dev script:', { command: 'npm', args: ['run', 'dev'] });
-          console.groupEnd();
+          /* console.log('3️⃣ ✅ Found dev script:', { command: 'npm', args: ['run', 'dev'] });
+          console.groupEnd(); */
           return { command: 'npm', args: ['run', 'dev'] };
         }
         if (packageJson.scripts.serve) {
-          console.log('3️⃣ ✅ Found serve script:', { command: 'npm', args: ['run', 'serve'] });
-          console.groupEnd();
+          /* console.log('3️⃣ ✅ Found serve script:', { command: 'npm', args: ['run', 'serve'] });
+          console.groupEnd(); */
           return { command: 'npm', args: ['run', 'serve'] };
         }
       }
 
-      console.log('4️⃣ 🔍 Checking framework dependencies...');
+      /* console.log('4️⃣ 🔍 Checking framework dependencies...'); */
       // Fallback commands based on common frameworks
       if (packageJson.dependencies?.next) {
-        console.log('4️⃣ ✅ Detected Next.js framework:', { command: 'npm', args: ['run', 'dev'] });
-        console.groupEnd();
+        /* console.log('4️⃣ ✅ Detected Next.js framework:', { command: 'npm', args: ['run', 'dev'] });
+        console.groupEnd(); */
         return { command: 'npm', args: ['run', 'dev'] };
       }
       if (packageJson.dependencies?.react) {
-        console.log('4️⃣ ✅ Detected React framework:', { command: 'npm', args: ['start'] });
-        console.groupEnd();
+        /* console.log('4️⃣ ✅ Detected React framework:', { command: 'npm', args: ['start'] });
+        console.groupEnd(); */
         return { command: 'npm', args: ['start'] };
       }
       if (packageJson.dependencies?.vue) {
-        console.log('4️⃣ ✅ Detected Vue framework:', { command: 'npm', args: ['run', 'dev'] });
-        console.groupEnd();
+        /* console.log('4️⃣ ✅ Detected Vue framework:', { command: 'npm', args: ['run', 'dev'] });
+        console.groupEnd(); */
         return { command: 'npm', args: ['run', 'dev'] };
       }
       if (packageJson.dependencies?.express) {
-        console.log('4️⃣ ✅ Detected Express framework:', { command: 'node', args: ['src/index.js'] });
-        console.groupEnd();
+        /* console.log('4️⃣ ✅ Detected Express framework:', { command: 'node', args: ['src/index.js'] });
+        console.groupEnd(); */
         return { command: 'node', args: ['src/index.js'] };
       }
 
-      console.log('5️⃣ 📋 Using default fallback command:', { command: 'npm', args: ['start'] });
+      /* console.log('5️⃣ 📋 Using default fallback command:', { command: 'npm', args: ['start'] });
+      console.groupEnd(); */
       // Default fallback
-      console.groupEnd();
       return { command: 'npm', args: ['start'] };
     } catch (error) {
       console.error('❌ ERROR: Could not read package.json:', error);
-      console.log('5️⃣ ⚠️ Using default fallback due to error:', { command: 'npm', args: ['start'] });
-      console.groupEnd();
+      /* console.log('5️⃣ ⚠️ Using default fallback due to error:', { command: 'npm', args: ['start'] });
+      console.groupEnd(); */
       return { command: 'npm', args: ['start'] };
     }
   }, []);
@@ -183,6 +187,7 @@ const WebContainerPreview = ({
 
   useEffect(() => {
     async function setupContainer() {
+      /* Commented out: WebContainer setup logs - uncomment to see detailed setup flow
       console.group('🏗️ WebContainer Setup Flow');
       console.log('1️⃣ Setup Check:', {
         hasInstance: !!instance,
@@ -190,33 +195,34 @@ const WebContainerPreview = ({
         isSetupInProgress: isSetupInProgress,
         hasTemplateData: !!templateData,
       });
+      */
 
       if (!instance || isSetupComplete || isSetupInProgress) {
-        console.log('1️⃣ ❌ BLOCKED: Cannot setup container', {
+        /* console.log('1️⃣ ❌ BLOCKED: Cannot setup container', {
           reason: !instance ? 'No instance' : isSetupComplete ? 'Already complete' : 'In progress',
         });
-        console.groupEnd();
+        console.groupEnd(); */
         return;
       }
 
       try {
-        console.log('2️⃣ ✅ PROCEEDING: Starting container setup');
+        /* console.log('2️⃣ ✅ PROCEEDING: Starting container setup'); */
         setIsSetupInProgress(true);
         setSetupError(null);
 
         try {
-          console.log('3️⃣ 🔍 Checking for existing package.json...');
+          /* console.log('3️⃣ 🔍 Checking for existing package.json...'); */
           const packageJsonExists = await instance.fs.readFile('package.json', 'utf8');
 
           if (packageJsonExists) {
-            console.log('3️⃣ ✅ Found existing package.json - reconnecting to server');
+            /* console.log('3️⃣ ✅ Found existing package.json - reconnecting to server'); */
             // Files are already mounted, just reconnect to existing server
             if (terminalRef.current?.writeToTerminal) {
               terminalRef.current.writeToTerminal('🔄 Reconnecting to existing WebContainer session...\r\n');
             }
 
             instance.on('server-ready', (port: number, url: string) => {
-              console.log('4️⃣ 🌐 Server reconnected:', { port, url });
+              /* console.log('4️⃣ 🌐 Server reconnected:', { port, url }); */
               if (terminalRef.current?.writeToTerminal) {
                 terminalRef.current.writeToTerminal(`🌐 Reconnected to server at ${url}\r\n`);
               }
@@ -231,16 +237,16 @@ const WebContainerPreview = ({
 
             setCurrentStep(4);
             setLoadingState(prev => ({ ...prev, starting: true }));
-            console.log('5️⃣ ✅ SUCCESS: Reconnected to existing server');
-            console.groupEnd();
+            /* console.log('5️⃣ ✅ SUCCESS: Reconnected to existing server');
+            console.groupEnd(); */
             return;
           }
         } catch (error) {
-          console.log('3️⃣ ℹ️ No existing package.json found, proceeding with full setup');
+          console.error('3️⃣ ℹ️ No existing package.json found, proceeding with full setup', error);
         }
 
         // Step-1 transform data
-        console.log('4️⃣ 🔄 Step 1: Transforming template data');
+        /* console.log('4️⃣ 🔄 Step 1: Transforming template data'); */
         setLoadingState(prev => ({ ...prev, transforming: true }));
         setCurrentStep(1);
         // Write to terminal
@@ -250,10 +256,10 @@ const WebContainerPreview = ({
 
         // @ts-ignore
         const files = transformToWebContainerFormat(templateData);
-        console.log('4️⃣ ✅ Template data transformed:', {
+        /* console.log('4️⃣ ✅ Template data transformed:', {
           fileCount: Object.keys(files).length,
           fileStructure: Object.keys(files),
-        });
+        }); */
         setLoadingState(prev => ({
           ...prev,
           transforming: false,
@@ -262,7 +268,7 @@ const WebContainerPreview = ({
         setCurrentStep(2);
 
         //  Step-2 Mount Files
-        console.log('5️⃣ 📁 Step 2: Mounting files to WebContainer');
+        /* console.log('5️⃣ 📁 Step 2: Mounting files to WebContainer'); */
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal('📁 Mounting files to WebContainer...\r\n');
         }
@@ -271,7 +277,7 @@ const WebContainerPreview = ({
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal('✅ Files mounted successfully\r\n');
         }
-        console.log('5️⃣ ✅ Files mounted successfully');
+        /* console.log('5️⃣ ✅ Files mounted successfully'); */
         setLoadingState(prev => ({
           ...prev,
           mounting: false,
@@ -280,23 +286,23 @@ const WebContainerPreview = ({
         setCurrentStep(3);
 
         // Step-3 Install dependencies (skip if node_modules already present)
-        console.log('6️⃣ 📦 Step 3: Installing dependencies');
+        /* console.log('6️⃣ 📦 Step 3: Installing dependencies'); */
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal('📦 Installing dependencies...\r\n');
         }
 
-        let didInstall = false;
+        // let didInstall = false;
         try {
           // Check if node_modules exists inside the WebContainer FS
           await instance.fs.readdir('node_modules');
-          console.log('6️⃣ ⚡ node_modules detected - skipping install');
+          /* console.log('6️⃣ ⚡ node_modules detected - skipping install'); */
           if (terminalRef.current?.writeToTerminal) {
             terminalRef.current.writeToTerminal('⚡ Skipping install (node_modules already present)\r\n');
           }
         } catch {
           // node_modules not present -> run install
           const installProcess = await instance.spawn('npm', ['install']);
-          console.log('6️⃣ 🚀 npm install process spawned');
+          /* console.log('6️⃣ 🚀 npm install process spawned'); */
 
           installProcess.output.pipeTo(
             new WritableStream({
@@ -308,19 +314,19 @@ const WebContainerPreview = ({
             })
           );
 
-          console.log('7️⃣ ⏳ Waiting for npm install to complete...');
+          /* console.log('7️⃣ ⏳ Waiting for npm install to complete...'); */
           const installExitCode = await installProcess.exit;
 
           if (installExitCode !== 0) {
-            console.log('7️⃣ ❌ FAILED: npm install failed', { exitCode: installExitCode });
+            console.error('❌ FAILED: npm install failed', { exitCode: installExitCode });
             throw new Error(`Failed to install dependencies. Exit code: ${installExitCode}`);
           }
 
-          didInstall = true;
+          // didInstall = true;
           if (terminalRef.current?.writeToTerminal) {
             terminalRef.current.writeToTerminal('✅ Dependencies installed successfully\r\n');
           }
-          console.log('7️⃣ ✅ Dependencies installed successfully');
+          /* console.log('7️⃣ ✅ Dependencies installed successfully'); */
         }
 
         setLoadingState(prev => ({
@@ -331,17 +337,17 @@ const WebContainerPreview = ({
         setCurrentStep(4);
 
         // STEP-4 Start The Server
-        console.log('8️⃣ 🚀 Step 4: Starting development server');
+        /* console.log('8️⃣ 🚀 Step 4: Starting development server'); */
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal('🚀 Starting development server...\r\n');
         }
 
         // Get the appropriate start command based on package.json
         const startCommand = await getStartCommand(instance);
-        console.log('8️⃣ 📋 Detected start command:', {
+        /* console.log('8️⃣ 📋 Detected start command:', {
           command: startCommand.command,
           args: startCommand.args,
-        });
+        }); */
 
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal(`📋 Using command: ${startCommand.command} ${startCommand.args.join(' ')}\r\n`);
@@ -349,10 +355,10 @@ const WebContainerPreview = ({
 
         const startProcess = await instance.spawn(startCommand.command, startCommand.args);
         serverProcessRef.current = startProcess;
-        console.log('8️⃣ 🚀 Server process spawned and stored');
+        /* console.log('8️⃣ 🚀 Server process spawned and stored'); */
 
         instance.on('server-ready', (port: number, url: string) => {
-          console.log('9️⃣ 🌐 Server ready event received:', { port, url });
+          /* console.log('9️⃣ 🌐 Server ready event received:', { port, url }); */
           if (terminalRef.current?.writeToTerminal) {
             terminalRef.current.writeToTerminal(`🌐 Server ready at ${url}\r\n`);
           }
@@ -369,7 +375,7 @@ const WebContainerPreview = ({
             // @ts-ignore
             (window as any).__APP_READY = true;
           } catch {}
-          console.log('🔟 ✅ SUCCESS: WebContainer setup completed');
+          /* console.log('🔟 ✅ SUCCESS: WebContainer setup completed'); */
         });
 
         // Handle start process output - stream to terminal
@@ -382,14 +388,14 @@ const WebContainerPreview = ({
             },
           })
         );
-        console.log('9️⃣ 📤 Server output stream connected');
+        /* console.log('9️⃣ 📤 Server output stream connected'); */
       } catch (err) {
         console.error('❌ ERROR: WebContainer setup failed:', err);
         const errorMessage = err instanceof Error ? err.message : String(err);
-        console.log('❌ FAILED: Setup error', {
+        /* console.log('❌ FAILED: Setup error', {
           errorMessage: errorMessage,
           step: currentStep,
-        });
+        }); */
 
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal(`❌ Setup Error: ${errorMessage}\r\n`);
@@ -408,22 +414,22 @@ const WebContainerPreview = ({
           starting: false,
           ready: false,
         });
-        console.groupEnd();
+        /* console.groupEnd(); */
       }
     }
 
     setupContainer();
-  }, [instance, templateData, isSetupComplete, isSetupInProgress]);
+  }, [instance, templateData, isSetupComplete, isSetupInProgress, getStartCommand]);
 
   useEffect(() => {
     return () => {
       // Cleanup server process on unmount
       if (serverProcessRef.current) {
-        console.log('🧹 CLEANUP: Stopping server process on unmount');
+        /* console.log('🧹 CLEANUP: Stopping server process on unmount'); */
         try {
           serverProcessRef.current.kill();
         } catch (error) {
-          console.log('⚠️ CLEANUP: Error stopping server process:', error);
+          console.error('⚠️ CLEANUP: Error stopping server process:', error);
         }
         serverProcessRef.current = null;
       }
@@ -435,7 +441,7 @@ const WebContainerPreview = ({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.ctrlKey && event.key === 'c' && isSetupComplete) {
         event.preventDefault();
-        console.log('⌨️ Keyboard shortcut: Ctrl+C pressed - stopping server');
+        /* console.log('⌨️ Keyboard shortcut: Ctrl+C pressed - stopping server'); */
         stopServer();
       }
     };
