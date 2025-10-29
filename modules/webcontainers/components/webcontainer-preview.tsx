@@ -48,22 +48,27 @@ const WebContainerPreview = ({
 
   const terminalRef = useRef<any>(null);
   const serverProcessRef = useRef<any>(null);
+  const serverReadyListenerRef = useRef<(() => void) | null>(null);
+  const isManuallyStoppedRef = useRef<boolean>(false);
 
   // Function to stop the development server
   const stopServer = useCallback(() => {
-    /* Commented out: Stop server logs - uncomment to see stop flow
     console.group('🛑 Stop Server Flow');
     console.log('1️⃣ Stop Request:', {
       hasServerProcess: !!serverProcessRef.current,
+      hasListener: !!serverReadyListenerRef.current,
       isSetupComplete: isSetupComplete,
     });
-    */
 
+    // Mark as manually stopped to prevent auto-reconnection
+    isManuallyStoppedRef.current = true;
+
+    // Kill server process
     if (serverProcessRef.current) {
-      /* console.log('2️⃣ 🛑 Stopping server process'); */
+      console.log('2️⃣ 🛑 Stopping server process');
       try {
         serverProcessRef.current.kill();
-        /* console.log('2️⃣ ✅ Server process killed successfully'); */
+        console.log('2️⃣ ✅ Server process killed successfully');
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal('🛑 Development server stopped\r\n');
         }
@@ -72,12 +77,19 @@ const WebContainerPreview = ({
       }
       serverProcessRef.current = null;
     } else {
-      /* console.log('2️⃣ ℹ️ No server process to stop'); */
+      console.log('2️⃣ ℹ️ No server process to stop');
+    }
+
+    // Clear the listener reference (note: WebContainer doesn't have .off() method)
+    if (serverReadyListenerRef.current) {
+      console.log('2️⃣ 🧹 Clearing server-ready listener reference');
+      serverReadyListenerRef.current = null;
     }
 
     // Reset states
     setPreviewUrl('');
     setIsSetupComplete(false);
+    setIsSetupInProgress(false);
     setLoadingState({
       transforming: false,
       mounting: false,
@@ -88,9 +100,9 @@ const WebContainerPreview = ({
     setCurrentStep(0);
     setSetupError(null);
 
-    /* console.log('3️⃣ ✅ SUCCESS: Server stopped and states reset');
-    console.groupEnd(); */
-  }, []);
+    console.log('3️⃣ ✅ SUCCESS: Server stopped and states reset');
+    console.groupEnd();
+  }, [isSetupComplete]);
 
   // Function to detect and get appropriate start command
   const getStartCommand = useCallback(async (instance: any) => {
@@ -171,6 +183,8 @@ const WebContainerPreview = ({
   // Reset setup state when forceResetup changes
   useEffect(() => {
     if (forceResetup) {
+      // Allow reconnection after manual reset
+      isManuallyStoppedRef.current = false;
       setIsSetupComplete(false);
       setIsSetupInProgress(false);
       setPreviewUrl('');
@@ -197,9 +211,9 @@ const WebContainerPreview = ({
       });
       */
 
-      if (!instance || isSetupComplete || isSetupInProgress) {
+      if (!instance || isSetupComplete || isSetupInProgress || isManuallyStoppedRef.current) {
         /* console.log('1️⃣ ❌ BLOCKED: Cannot setup container', {
-          reason: !instance ? 'No instance' : isSetupComplete ? 'Already complete' : 'In progress',
+          reason: !instance ? 'No instance' : isSetupComplete ? 'Already complete' : isSetupInProgress ? 'In progress' : 'Manually stopped',
         });
         console.groupEnd(); */
         return;
@@ -215,14 +229,14 @@ const WebContainerPreview = ({
           const packageJsonExists = await instance.fs.readFile('package.json', 'utf8');
 
           if (packageJsonExists) {
-            /* console.log('3️⃣ ✅ Found existing package.json - reconnecting to server'); */
+            console.log('3️⃣ ✅ Found existing package.json - reconnecting to server');
             // Files are already mounted, just reconnect to existing server
             if (terminalRef.current?.writeToTerminal) {
               terminalRef.current.writeToTerminal('🔄 Reconnecting to existing WebContainer session...\r\n');
             }
 
-            instance.on('server-ready', (port: number, url: string) => {
-              /* console.log('4️⃣ 🌐 Server reconnected:', { port, url }); */
+            const reconnectHandler = (port: number, url: string) => {
+              console.log('4️⃣ 🌐 Server reconnected:', { port, url });
               if (terminalRef.current?.writeToTerminal) {
                 terminalRef.current.writeToTerminal(`🌐 Reconnected to server at ${url}\r\n`);
               }
@@ -233,12 +247,14 @@ const WebContainerPreview = ({
                 starting: false,
                 ready: true,
               }));
-            });
+            };
+
+            instance.on('server-ready', reconnectHandler);
+            serverReadyListenerRef.current = reconnectHandler;
 
             setCurrentStep(4);
             setLoadingState(prev => ({ ...prev, starting: true }));
-            /* console.log('5️⃣ ✅ SUCCESS: Reconnected to existing server');
-            console.groupEnd(); */
+            console.log('5️⃣ ✅ SUCCESS: Reconnected to existing server');
             return;
           }
         } catch (error) {
@@ -255,11 +271,17 @@ const WebContainerPreview = ({
         }
 
         // @ts-ignore
+        console.log('4️⃣ 📋 Transforming template data:', {
+          hasTemplateData: !!templateData,
+          folderName: templateData.folderName,
+          itemsCount: templateData.items?.length,
+          firstItem: templateData.items?.[0],
+        });
         const files = transformToWebContainerFormat(templateData);
-        /* console.log('4️⃣ ✅ Template data transformed:', {
+        console.log('4️⃣ ✅ Template data transformed:', {
           fileCount: Object.keys(files).length,
           fileStructure: Object.keys(files),
-        }); */
+        });
         setLoadingState(prev => ({
           ...prev,
           transforming: false,
@@ -357,8 +379,9 @@ const WebContainerPreview = ({
         serverProcessRef.current = startProcess;
         /* console.log('8️⃣ 🚀 Server process spawned and stored'); */
 
-        instance.on('server-ready', (port: number, url: string) => {
-          /* console.log('9️⃣ 🌐 Server ready event received:', { port, url }); */
+        // Store the listener function so we can remove it later
+        const serverReadyHandler = (port: number, url: string) => {
+          console.log('9️⃣ 🌐 Server ready event received:', { port, url });
           if (terminalRef.current?.writeToTerminal) {
             terminalRef.current.writeToTerminal(`🌐 Server ready at ${url}\r\n`);
           }
@@ -375,8 +398,11 @@ const WebContainerPreview = ({
             // @ts-ignore
             (window as any).__APP_READY = true;
           } catch {}
-          /* console.log('🔟 ✅ SUCCESS: WebContainer setup completed'); */
-        });
+          console.log('🔟 ✅ SUCCESS: WebContainer setup completed');
+        };
+
+        instance.on('server-ready', serverReadyHandler);
+        serverReadyListenerRef.current = serverReadyHandler;
 
         // Handle start process output - stream to terminal
         startProcess.output.pipeTo(
@@ -538,7 +564,7 @@ const WebContainerPreview = ({
             <div className='h-full flex flex-col'>
               <div className='flex justify-between items-center mb-2'>
                 <h3 className='text-sm font-medium text-gray-700 dark:text-gray-300'>Terminal</h3>
-                {isSetupComplete && (
+                {(isSetupComplete || serverProcessRef.current) && (
                   <button
                     onClick={stopServer}
                     title='Stop development server (Ctrl+C)'

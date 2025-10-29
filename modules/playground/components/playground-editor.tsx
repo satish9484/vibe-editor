@@ -135,6 +135,11 @@ export const PlaygroundEditor = ({
         freeInlineCompletions: (completions: any) => {
           // console.log('🧹 freeInlineCompletions called - cleaning up');
         },
+        disposeInlineCompletions: () => {
+          // Cleanup method required by Monaco's inline completion provider interface
+          // This method is called when the provider is disposed
+          // No additional cleanup needed as freeInlineCompletions handles it
+        },
       };
     },
     [suggestion, suggestionPosition]

@@ -89,16 +89,30 @@ export function transformToWebContainerFormat(template: { folderName: string; it
     }
 
     try {
+      // Log the item structure for debugging
+      console.log(`Processing root item ${index}:`, {
+        filename: item.filename,
+        fileExtension: item.fileExtension,
+        folderName: item.folderName,
+        hasItems: !!item.items,
+        itemsCount: item.items?.length,
+      });
+
       const key = item.fileExtension ? `${item.filename}.${item.fileExtension}` : item.folderName!;
 
       if (!key) {
-        console.warn(`Skipping item with no filename/folderName at index ${index} in root template`);
+        console.warn(`Skipping item with no filename/folderName at index ${index} in root template`, {
+          item,
+          filename: item.filename,
+          fileExtension: item.fileExtension,
+          folderName: item.folderName,
+        });
         return;
       }
 
       result[key] = processItem(item);
     } catch (error) {
-      console.error(`Error processing root item at index ${index}:`, error);
+      console.error(`Error processing root item at index ${index}:`, error, { item });
       throw error;
     }
   });

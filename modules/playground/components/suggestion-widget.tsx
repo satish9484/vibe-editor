@@ -177,14 +177,18 @@ class SuggestionWidget {
 
 export const useSuggestionWidget = ({ editor, monaco, suggestion, position, onAccept, onReject }: SuggestionWidgetProps) => {
   const widgetRef = useRef<SuggestionWidget | null>(null);
+  const hasRegisteredWidget = useRef(false);
 
   useEffect(() => {
     // Only create widget if editor is mounted and suggestion is active
     if (!editor || !monaco || !suggestion || !position) {
       // Cleanup if suggestion is cleared
       if (widgetRef.current) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (editor as any)?.removeContentWidget?.(widgetRef.current);
         widgetRef.current.dispose();
         widgetRef.current = null;
+        hasRegisteredWidget.current = false;
       }
       return;
     }
@@ -195,8 +199,14 @@ export const useSuggestionWidget = ({ editor, monaco, suggestion, position, onAc
       widgetRef.current = new SuggestionWidget(editor as any, suggestion, position, onAccept, onReject);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (editor as any).addContentWidget(widgetRef.current);
+      hasRegisteredWidget.current = true;
+    } else if (!hasRegisteredWidget.current) {
+      // Widget exists but wasn't registered yet
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (editor as any).addContentWidget(widgetRef.current);
+      hasRegisteredWidget.current = true;
     } else {
-      // Update widget position if already exists
+      // Update widget position if already exists and registered
       widgetRef.current.updatePosition(position, suggestion);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (editor as any).layoutContentWidget(widgetRef.current);
@@ -204,9 +214,12 @@ export const useSuggestionWidget = ({ editor, monaco, suggestion, position, onAc
 
     return () => {
       // Cleanup on unmount
-      if (widgetRef.current) {
+      if (widgetRef.current && hasRegisteredWidget.current) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (editor as any)?.removeContentWidget?.(widgetRef.current);
         widgetRef.current.dispose();
         widgetRef.current = null;
+        hasRegisteredWidget.current = false;
       }
     };
   }, [editor, monaco, suggestion, position, onAccept, onReject]);
