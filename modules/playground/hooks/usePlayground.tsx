@@ -41,7 +41,14 @@ export const usePlayground = (id: string): UsePlaygroundReturn => {
       if (typeof rawContent === 'string') {
         const parsedContent = JSON.parse(rawContent);
         setTemplateData(parsedContent);
-        toast.success('playground loaded successfully');
+        toast.success('playground loaded successfully (string content)');
+        return;
+      }
+
+      if (rawContent && typeof rawContent === 'object') {
+        // Prisma Json comes back as an object; use it directly
+        setTemplateData(rawContent as TemplateFolder);
+        toast.success('playground loaded successfully (json content)');
         return;
       }
 
