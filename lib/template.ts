@@ -31,7 +31,8 @@ export const templateFallbacks = {
       {
         filename: 'package',
         fileExtension: 'json',
-        content: '{"name":"react-starter","private":true,"scripts":{"start":"vite"}}\n',
+        content:
+          '{"name":"react-starter","private":true,"version":"0.0.1","type":"module","scripts":{"dev":"vite","build":"vite build","preview":"vite preview"},"dependencies":{"react":"^18.3.1","react-dom":"^18.3.1"},"devDependencies":{"typescript":"^5.5.4","vite":"^5.4.10","@types/react":"^18.3.5","@types/react-dom":"^18.3.0"}}\n',
       },
       {
         filename: 'README',
@@ -56,7 +57,8 @@ export const templateFallbacks = {
       {
         filename: 'package',
         fileExtension: 'json',
-        content: '{"name":"next-starter","private":true,"scripts":{"dev":"next dev"}}\n',
+        content:
+          '{"name":"next-starter","private":true,"version":"0.0.1","type":"module","scripts":{"dev":"next dev","build":"next build","start":"next start"},"dependencies":{"next":"^14.2.10","react":"^18.3.1","react-dom":"^18.3.1"},"devDependencies":{"typescript":"^5.5.4"}}\n',
       },
       {
         filename: 'README',
@@ -76,7 +78,8 @@ export const templateFallbacks = {
       {
         filename: 'package',
         fileExtension: 'json',
-        content: '{"name":"express-starter","private":true,"scripts":{"start":"node server.js"}}\n',
+        content:
+          '{"name":"express-starter","private":true","version":"0.0.1","type":"module","scripts":{"dev":"node server.js","start":"node server.js"},"dependencies":{"express":"^4.19.2"}}\n',
       },
       {
         filename: 'README',
@@ -106,7 +109,8 @@ export const templateFallbacks = {
       {
         filename: 'package',
         fileExtension: 'json',
-        content: '{"name":"vue-starter","private":true,"scripts":{"start":"vite"}}\n',
+        content:
+          '{"name":"vue-starter","private":true,"version":"0.0.1","type":"module","scripts":{"dev":"vite","build":"vite build","preview":"vite preview"},"dependencies":{"vue":"^3.5.10"},"devDependencies":{"vite":"^5.4.10","typescript":"^5.5.4"}}\n',
       },
       {
         filename: 'README',
@@ -128,6 +132,12 @@ export const templateFallbacks = {
         fileExtension: 'md',
         content: '# Hono Starter (Fallback)\n',
       },
+      {
+        filename: 'package',
+        fileExtension: 'json',
+        content:
+          '{"name":"hono-starter","private":true,"version":"0.0.1","type":"module","scripts":{"dev":"node server.ts"},"dependencies":{"hono":"^4.6.7"},"devDependencies":{"typescript":"^5.5.4"}}\n',
+      },
     ],
   },
   ANGULAR: {
@@ -141,7 +151,8 @@ export const templateFallbacks = {
       {
         filename: 'package',
         fileExtension: 'json',
-        content: '{"name":"angular-starter","private":true,"scripts":{"start":"ng serve"}}\n',
+        content:
+          '{"name":"angular-starter","private":true,"version":"0.0.1","scripts":{"dev":"ng serve","build":"ng build"},"dependencies":{"@angular/core":"^18.2.0","rxjs":"^7.8.1","zone.js":"^0.14.10"},"devDependencies":{"@angular/cli":"^18.2.0","typescript":"^5.5.4"}}\n',
       },
     ],
   },

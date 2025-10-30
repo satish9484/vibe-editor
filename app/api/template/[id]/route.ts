@@ -1,4 +1,3 @@
-import { db } from '@/lib/db';
 import { getTemplateFallback, templatePaths, toCanonicalTemplateKey } from '@/lib/template';
 import { scanTemplateDirectory, TemplateFolder } from '@/modules/playground/lib/path-to-json';
 import { NextRequest } from 'next/server';
@@ -18,32 +17,13 @@ function validateJsonStructure(data: unknown): boolean {
 }
 
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { id } = await context.params;
 
-  if (!id) {
-    return Response.json({ error: 'Missing playground ID' }, { status: 400 });
-  }
-
-  let playground: { template: string | null } | null = null;
-  try {
-    playground = await db.playground.findUnique({
-      where: { id },
-      select: { template: true },
-    });
-  } catch (err) {
-    console.error('DB error finding playground, returning fallback:', err);
-    const fallback = getTemplateFallback('REACT');
-    return Response.json({ success: true, templateJson: fallback, fallback: true }, { status: 200 });
-  }
-
-  if (!playground) {
-    const fallback = getTemplateFallback('REACT');
-    return Response.json({ success: true, templateJson: fallback, fallback: true }, { status: 200 });
-  }
-
-  const rawTemplate = (playground?.template ?? undefined) as string | undefined;
-  const templateKey = toCanonicalTemplateKey(rawTemplate);
-  const templatePath = templateKey ? templatePaths[templateKey] : undefined;
+  // Use template from query (?template=REACT|NEXTJS|...) or default to REACT
+  const rawTemplate = request.nextUrl.searchParams.get('template') ?? undefined;
+  const templateKey = toCanonicalTemplateKey(rawTemplate) ?? 'REACT';
+  const templatePath = templatePaths[templateKey];
 
   if (!templatePath) {
     const fallback = getTemplateFallback(String(templateKey || 'REACT'));

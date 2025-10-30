@@ -102,6 +102,7 @@ export const createPlayground = async (data: {
   try {
     console.log('4️⃣ Creating playground in database...');
     const canonicalTemplate = toCanonicalTemplateKey(template) ?? 'REACT';
+    console.log('🧭 Normalized template key:', { input: template, canonicalTemplate });
     const playground = await db.playground.create({
       data: {
         title: title,
@@ -116,10 +117,12 @@ export const createPlayground = async (data: {
       title: playground.title,
       template: playground.template,
     });
+    console.log('📝 Playground row written to DB with normalized template.');
     // Seed starter files from vibecode-starters so first load doesn't require runtime scan
     try {
       const startersPath = templatePaths[canonicalTemplate];
       const inputPath = path.join(process.cwd(), startersPath);
+      console.log('📁 Scanning and saving starter tree to templateFiles.content from:', inputPath);
       const scanned: TemplateFolder = await scanTemplateDirectory(inputPath);
       const jsonContent: Prisma.InputJsonValue = JSON.parse(JSON.stringify(scanned));
       await db.templateFile.create({
@@ -133,6 +136,7 @@ export const createPlayground = async (data: {
       console.error('6️⃣ ❌ Failed to seed starter; writing minimal fallback JSON:', seedError);
       const fallback = getTemplateFallback(canonicalTemplate);
       const jsonFallback: Prisma.InputJsonValue = JSON.parse(JSON.stringify(fallback));
+      console.log('🛟 Seeding fallback template JSON to templateFiles.content');
       await db.templateFile.create({
         data: {
           playgroundId: playground.id,
