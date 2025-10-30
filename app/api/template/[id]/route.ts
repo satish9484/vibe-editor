@@ -1,7 +1,6 @@
 import { db } from '@/lib/db';
-import { templatePaths } from '@/lib/template';
-import { readTemplateStructureFromJson, saveTemplateStructureToJson } from '@/modules/playground/lib/path-to-json';
-import fs from 'fs/promises';
+import { getTemplateFallback, templatePaths, toCanonicalTemplateKey } from '@/lib/template';
+import { scanTemplateDirectory, TemplateFolder } from '@/modules/playground/lib/path-to-json';
 import { NextRequest } from 'next/server';
 import path from 'path';
 
@@ -18,45 +17,51 @@ function validateJsonStructure(data: unknown): boolean {
   }
 }
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+  const { id } = params;
 
   if (!id) {
     return Response.json({ error: 'Missing playground ID' }, { status: 400 });
   }
 
-  const playground = await db.playground.findUnique({
-    where: { id },
-  });
-
-  if (!playground) {
-    return Response.json({ error: 'Playground not found' }, { status: 404 });
+  let playground: any = null;
+  try {
+    playground = await db.playground.findUnique({
+      where: { id },
+    });
+  } catch (err) {
+    console.error('DB error finding playground, returning fallback:', err);
+    const fallback = getTemplateFallback('REACT');
+    return Response.json({ success: true, templateJson: fallback, fallback: true }, { status: 200 });
   }
 
-  const templateKey = playground.template as keyof typeof templatePaths;
-  const templatePath = templatePaths[templateKey];
+  if (!playground) {
+    const fallback = getTemplateFallback('REACT');
+    return Response.json({ success: true, templateJson: fallback, fallback: true }, { status: 200 });
+  }
+
+  const rawTemplate = (playground as any)?.template as string | undefined;
+  const templateKey = toCanonicalTemplateKey(rawTemplate);
+  const templatePath = templateKey ? templatePaths[templateKey] : undefined;
 
   if (!templatePath) {
-    return Response.json({ error: 'Invalid template' }, { status: 404 });
+    const fallback = getTemplateFallback(String(templateKey || 'REACT'));
+    return Response.json({ success: true, templateJson: fallback, fallback: true }, { status: 200 });
   }
 
   try {
     const inputPath = path.join(process.cwd(), templatePath);
-    const outputFile = path.join(process.cwd(), `output/${templateKey}.json`);
+    const scanned: TemplateFolder = await scanTemplateDirectory(inputPath);
 
-    await saveTemplateStructureToJson(inputPath, outputFile);
-    const result = await readTemplateStructureFromJson(outputFile);
-
-    // Validate the JSON structure before saving
-    if (!validateJsonStructure(result.items)) {
-      return Response.json({ error: 'Invalid JSON structure' }, { status: 500 });
+    if (!validateJsonStructure(scanned.items)) {
+      const fallback = getTemplateFallback(String(templateKey || 'REACT'));
+      return Response.json({ success: true, templateJson: fallback, fallback: true }, { status: 200 });
     }
 
-    await fs.unlink(outputFile);
-
-    return Response.json({ success: true, templateJson: result }, { status: 200 });
+    return Response.json({ success: true, templateJson: scanned }, { status: 200 });
   } catch (error) {
-    console.error('Error generating template JSON:', error);
-    return Response.json({ error: 'Failed to generate template' }, { status: 500 });
+    console.error('Template scan failed, using fallback:', error);
+    const fallback = getTemplateFallback(String(templateKey || 'REACT'));
+    return Response.json({ success: true, templateJson: fallback, fallback: true }, { status: 200 });
   }
 }
