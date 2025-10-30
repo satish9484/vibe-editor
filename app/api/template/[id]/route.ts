@@ -17,17 +17,18 @@ function validateJsonStructure(data: unknown): boolean {
   }
 }
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params;
+export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
 
   if (!id) {
     return Response.json({ error: 'Missing playground ID' }, { status: 400 });
   }
 
-  let playground: any = null;
+  let playground: { template: string | null } | null = null;
   try {
     playground = await db.playground.findUnique({
       where: { id },
+      select: { template: true },
     });
   } catch (err) {
     console.error('DB error finding playground, returning fallback:', err);
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     return Response.json({ success: true, templateJson: fallback, fallback: true }, { status: 200 });
   }
 
-  const rawTemplate = (playground as any)?.template as string | undefined;
+  const rawTemplate = (playground?.template ?? undefined) as string | undefined;
   const templateKey = toCanonicalTemplateKey(rawTemplate);
   const templatePath = templateKey ? templatePaths[templateKey] : undefined;
 
