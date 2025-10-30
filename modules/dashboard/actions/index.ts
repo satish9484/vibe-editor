@@ -1,8 +1,12 @@
 'use server';
 
 import { db } from '@/lib/db';
+import { getTemplateFallback, templatePaths, toCanonicalTemplateKey } from '@/lib/template';
 import { currentUser } from '@/modules/auth/actions';
+import { scanTemplateDirectory, TemplateFolder } from '@/modules/playground/lib/path-to-json';
+import type { Prisma } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
+import path from 'path';
 
 export const toggleStarMarked = async (playgroundId: string, isChecked: boolean) => {
   const user = await currentUser();
@@ -42,16 +46,21 @@ export const toggleStarMarked = async (playgroundId: string, isChecked: boolean)
 export const getAllPlaygroundForUser = async () => {
   const user = await currentUser();
 
+  // If no authenticated user, return empty list to avoid unsafe non-null assertions
+  if (!user?.id) {
+    return [];
+  }
+
   try {
     const playground = await db.playground.findMany({
       where: {
-        userId: user?.id,
+        userId: user.id,
       },
       include: {
         user: true,
         Starmark: {
           where: {
-            userId: user?.id!,
+            userId: user.id,
           },
           select: {
             isMarked: true,
@@ -92,11 +101,12 @@ export const createPlayground = async (data: {
 
   try {
     console.log('4️⃣ Creating playground in database...');
+    const canonicalTemplate = toCanonicalTemplateKey(template) ?? 'REACT';
     const playground = await db.playground.create({
       data: {
         title: title,
         description: description,
-        template: template,
+        template: canonicalTemplate,
         userId: user.id,
       },
     });
@@ -106,6 +116,31 @@ export const createPlayground = async (data: {
       title: playground.title,
       template: playground.template,
     });
+    // Seed starter files from vibecode-starters so first load doesn't require runtime scan
+    try {
+      const startersPath = templatePaths[canonicalTemplate];
+      const inputPath = path.join(process.cwd(), startersPath);
+      const scanned: TemplateFolder = await scanTemplateDirectory(inputPath);
+      const jsonContent: Prisma.InputJsonValue = JSON.parse(JSON.stringify(scanned));
+      await db.templateFile.create({
+        data: {
+          playgroundId: playground.id,
+          content: jsonContent,
+        },
+      });
+      console.log('6️⃣ ✅ Seeded starter template files for playground:', playground.id);
+    } catch (seedError) {
+      console.error('6️⃣ ❌ Failed to seed starter; writing minimal fallback JSON:', seedError);
+      const fallback = getTemplateFallback(canonicalTemplate);
+      const jsonFallback: Prisma.InputJsonValue = JSON.parse(JSON.stringify(fallback));
+      await db.templateFile.create({
+        data: {
+          playgroundId: playground.id,
+          content: jsonFallback,
+        },
+      });
+    }
+
     console.groupEnd();
     return playground;
   } catch (error) {
