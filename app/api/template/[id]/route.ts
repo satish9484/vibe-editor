@@ -31,7 +31,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
   }
 
   try {
-    const inputPath = path.join(process.cwd(), templatePath);
+    const normalized = templatePath.replace(/^[\\\/]+/, '');
+    const inputPath = path.join(process.cwd(), normalized);
     const scanned: TemplateFolder = await scanTemplateDirectory(inputPath);
 
     if (!validateJsonStructure(scanned.items)) {

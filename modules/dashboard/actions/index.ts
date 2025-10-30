@@ -121,7 +121,8 @@ export const createPlayground = async (data: {
     // Seed starter files from vibecode-starters so first load doesn't require runtime scan
     try {
       const startersPath = templatePaths[canonicalTemplate];
-      const inputPath = path.join(process.cwd(), startersPath);
+      const normalizedStartersPath = startersPath.replace(/^[\\\/]+/, '');
+      const inputPath = path.join(process.cwd(), normalizedStartersPath);
       console.log('📁 Scanning and saving starter tree to templateFiles.content from:', inputPath);
       const scanned: TemplateFolder = await scanTemplateDirectory(inputPath);
       const jsonContent: Prisma.InputJsonValue = JSON.parse(JSON.stringify(scanned));
