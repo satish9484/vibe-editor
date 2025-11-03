@@ -53,24 +53,24 @@ const WebContainerPreview = ({
 
   // Function to stop the development server
   const stopServer = useCallback(() => {
-    console.group('🛑 Stop Server Flow');
+    // console.group('🛑 Stop Server Flow');
 
-    console.log('1️⃣ Stop Request:', {
-      hasServerProcess: !!serverProcessRef.current,
-      hasListener: !!serverReadyListenerRef.current,
-      isSetupComplete: isSetupComplete,
-    });
+    // console.log('1️⃣ Stop Request:', {
+    //   hasServerProcess: !!serverProcessRef.current,
+    //   hasListener: !!serverReadyListenerRef.current,
+    //   isSetupComplete: isSetupComplete,
+    // });
 
     // Mark as manually stopped to prevent auto-reconnection
     isManuallyStoppedRef.current = true;
 
     // Kill server process
     if (serverProcessRef.current) {
-      console.log('2️⃣ 🛑 Stopping server process');
+      // console.log('2️⃣ 🛑 Stopping server process');
       try {
         serverProcessRef.current.kill();
 
-        console.log('2️⃣ ✅ Server process killed successfully');
+        // console.log('2️⃣ ✅ Server process killed successfully');
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal('🛑 Development server stopped\r\n');
         }
@@ -79,12 +79,12 @@ const WebContainerPreview = ({
       }
       serverProcessRef.current = null;
     } else {
-      console.log('2️⃣ ℹ️ No server process to stop');
+      // console.log('2️⃣ ℹ️ No server process to stop');
     }
 
     // Clear the listener reference (note: WebContainer doesn't have .off() method)
     if (serverReadyListenerRef.current) {
-      console.log('2️⃣ 🧹 Clearing server-ready listener reference');
+      // console.log('2️⃣ 🧹 Clearing server-ready listener reference');
       serverReadyListenerRef.current = null;
     }
 
@@ -102,8 +102,8 @@ const WebContainerPreview = ({
     setCurrentStep(0);
     setSetupError(null);
 
-    console.log('3️⃣ ✅ SUCCESS: Server stopped and states reset');
-    console.groupEnd();
+    // console.log('3️⃣ ✅ SUCCESS: Server stopped and states reset');
+    // console.groupEnd();
   }, [isSetupComplete]);
 
   // Function to detect and get appropriate start command
@@ -231,14 +231,14 @@ const WebContainerPreview = ({
           const packageJsonExists = await instance.fs.readFile('package.json', 'utf8');
 
           if (packageJsonExists) {
-            console.log('3️⃣ ✅ Found existing package.json - reconnecting to server');
+            // console.log('3️⃣ ✅ Found existing package.json - reconnecting to server');
             // Files are already mounted, just reconnect to existing server
             if (terminalRef.current?.writeToTerminal) {
               terminalRef.current.writeToTerminal('🔄 Reconnecting to existing WebContainer session...\r\n');
             }
 
             const reconnectHandler = (port: number, url: string) => {
-              console.log('4️⃣ 🌐 Server reconnected:', { port, url });
+              // console.log('4️⃣ 🌐 Server reconnected:', { port, url });
               if (terminalRef.current?.writeToTerminal) {
                 terminalRef.current.writeToTerminal(`🌐 Reconnected to server at ${url}\r\n`);
               }
@@ -257,7 +257,7 @@ const WebContainerPreview = ({
             setCurrentStep(4);
             setLoadingState(prev => ({ ...prev, starting: true }));
 
-            console.log('5️⃣ ✅ SUCCESS: Reconnected to existing server');
+            // console.log('5️⃣ ✅ SUCCESS: Reconnected to existing server');
             return;
           }
         } catch (error) {
@@ -276,18 +276,18 @@ const WebContainerPreview = ({
 
         // @ts-ignore
 
-        console.log('4️⃣ 📋 Transforming template data:', {
-          hasTemplateData: !!templateData,
-          folderName: templateData.folderName,
-          itemsCount: templateData.items?.length,
-          firstItem: templateData.items?.[0],
-        });
+        // console.log('4️⃣ 📋 Transforming template data:', {
+        //   hasTemplateData: !!templateData,
+        //   folderName: templateData.folderName,
+        //   itemsCount: templateData.items?.length,
+        //   firstItem: templateData.items?.[0],
+        // });
         const files = transformToWebContainerFormat(templateData);
 
-        console.log('4️⃣ ✅ Template data transformed:', {
-          fileCount: Object.keys(files).length,
-          fileStructure: Object.keys(files),
-        });
+        // console.log('4️⃣ ✅ Template data transformed:', {
+        //   fileCount: Object.keys(files).length,
+        //   fileStructure: Object.keys(files),
+        // });
         setLoadingState(prev => ({
           ...prev,
           transforming: false,
@@ -395,7 +395,7 @@ const WebContainerPreview = ({
 
         // Store the listener function so we can remove it later
         const serverReadyHandler = (port: number, url: string) => {
-          console.log('9️⃣ 🌐 Server ready event received:', { port, url });
+          // console.log('9️⃣ 🌐 Server ready event received:', { port, url });
           if (terminalRef.current?.writeToTerminal) {
             terminalRef.current.writeToTerminal(`🌐 Server ready at ${url}\r\n`);
           }
@@ -413,7 +413,7 @@ const WebContainerPreview = ({
             (window as any).__APP_READY = true;
           } catch {}
 
-          console.log('🔟 ✅ SUCCESS: WebContainer setup completed');
+          // console.log('🔟 ✅ SUCCESS: WebContainer setup completed');
         };
 
         instance.on('server-ready', serverReadyHandler);

@@ -20,7 +20,7 @@ interface WebContainerDirectory {
 
 type WebContainerFileSystem = Record<string, WebContainerFile | WebContainerDirectory>;
 
-export function transformToWebContainerFormat(template: { folderName: string; items: any[] }): WebContainerFileSystem {
+export function transformToWebContainerFormat(template: { folderName: string; items: TemplateItem[] }): WebContainerFileSystem {
   if (!template || !template.items || !Array.isArray(template.items)) {
     throw new Error('Invalid template data: template must have items array');
   }
@@ -91,13 +91,13 @@ export function transformToWebContainerFormat(template: { folderName: string; it
     try {
       // Log the item structure for debugging
 
-      console.log(`Processing root item ${index}:`, {
-        filename: item.filename,
-        fileExtension: item.fileExtension,
-        folderName: item.folderName,
-        hasItems: !!item.items,
-        itemsCount: item.items?.length,
-      });
+      // console.log(`Processing root item ${index}:`, {
+      //   filename: item.filename,
+      //   fileExtension: item.fileExtension,
+      //   folderName: item.folderName,
+      //   hasItems: !!item.items,
+      //   itemsCount: item.items?.length,
+      // });
 
       const key = item.fileExtension && item.filename ? `${item.filename}.${item.fileExtension}` : item.folderName;
 

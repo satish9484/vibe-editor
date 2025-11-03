@@ -118,18 +118,18 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
 
   const executeCommand = useCallback(
     async (command: string) => {
-      console.group('⚡ Command Execution Flow');
+      // console.group('⚡ Command Execution Flow');
 
-      console.log('1️⃣ Command Received:', {
-        command: command,
-        commandLength: command.length,
-        hasWebContainer: !!webContainerInstance,
-        hasTerminal: !!term.current,
-      });
+      // console.log('1️⃣ Command Received:', {
+      //   command: command,
+      //   commandLength: command.length,
+      //   hasWebContainer: !!webContainerInstance,
+      //   hasTerminal: !!term.current,
+      // });
 
       if (!webContainerInstance || !term.current) {
-        console.log('1️⃣ ❌ BLOCKED: Cannot execute command - missing WebContainer or terminal');
-        console.groupEnd();
+        // console.log('1️⃣ ❌ BLOCKED: Cannot execute command - missing WebContainer or terminal');
+        // console.groupEnd();
         return;
       }
 
@@ -137,41 +137,41 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
       if (command.trim() && commandHistory.current[commandHistory.current.length - 1] !== command) {
         commandHistory.current.push(command);
 
-        console.log('2️⃣ 📝 Command added to history:', {
-          historyLength: commandHistory.current.length,
-          command: command.trim(),
-        });
+        // console.log('2️⃣ 📝 Command added to history:', {
+        //   historyLength: commandHistory.current.length,
+        //   command: command.trim(),
+        // });
       }
       historyIndex.current = -1;
 
       try {
         // Handle built-in commands
         if (command.trim() === 'clear') {
-          console.log('2️⃣ 🧹 Built-in Command: Clear terminal');
+          // console.log('2️⃣ 🧹 Built-in Command: Clear terminal');
           term.current.clear();
           writePrompt();
 
-          console.log('3️⃣ ✅ SUCCESS: Terminal cleared');
-          console.groupEnd();
+          // console.log('3️⃣ ✅ SUCCESS: Terminal cleared');
+          // console.groupEnd();
           return;
         }
 
         if (command.trim() === 'history') {
-          console.log('2️⃣ 📚 Built-in Command: Show history');
+          // console.log('2️⃣ 📚 Built-in Command: Show history');
           commandHistory.current.forEach((cmd, index) => {
             term.current!.writeln(`  ${index + 1}  ${cmd}`);
           });
           writePrompt();
 
-          console.log('3️⃣ ✅ SUCCESS: History displayed');
-          console.groupEnd();
+          // console.log('3️⃣ ✅ SUCCESS: History displayed');
+          // console.groupEnd();
           return;
         }
 
         if (command.trim() === '') {
-          console.log('2️⃣ ℹ️ Empty command - showing prompt');
+          // console.log('2️⃣ ℹ️ Empty command - showing prompt');
           writePrompt();
-          console.groupEnd();
+          // console.groupEnd();
           return;
         }
 
@@ -180,21 +180,21 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
         const cmd = parts[0];
         const args = parts.slice(1);
 
-        console.log('2️⃣ 🔍 Parsing command:', {
-          command: cmd,
-          arguments: args,
-          argumentCount: args.length,
-        });
+        // console.log('2️⃣ 🔍 Parsing command:', {
+        //   command: cmd,
+        //   arguments: args,
+        //   argumentCount: args.length,
+        // });
 
         // Execute in WebContainer
         term.current.writeln('');
 
-        console.log('3️⃣ 🚀 Spawning process in WebContainer:', {
-          command: cmd,
-          args: args,
-          terminalCols: term.current.cols,
-          terminalRows: term.current.rows,
-        });
+        // console.log('3️⃣ 🚀 Spawning process in WebContainer:', {
+        //   command: cmd,
+        //   args: args,
+        //   terminalCols: term.current.cols,
+        //   terminalRows: term.current.rows,
+        // });
 
         const process = await webContainerInstance.spawn(cmd, args, {
           terminal: {
@@ -205,7 +205,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
 
         currentProcess.current = process;
 
-        console.log('4️⃣ 📡 Process spawned successfully');
+        // console.log('4️⃣ 📡 Process spawned successfully');
 
         // Handle process output
         process.output.pipeTo(
@@ -218,24 +218,24 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
           })
         );
 
-        console.log('5️⃣ 📤 Output stream connected');
+        // console.log('5️⃣ 📤 Output stream connected');
 
         // Wait for process to complete
 
-        console.log('6️⃣ ⏳ Waiting for process to complete...');
+        // console.log('6️⃣ ⏳ Waiting for process to complete...');
         const exitCode = await process.exit;
         currentProcess.current = null;
 
-        console.log('7️⃣ ✅ Process completed:', {
-          exitCode: exitCode,
-          success: exitCode === 0,
-        });
+        // console.log('7️⃣ ✅ Process completed:', {
+        //   exitCode: exitCode,
+        //   success: exitCode === 0,
+        // });
 
         // Show new prompt
         writePrompt();
 
-        console.log('8️⃣ ✅ SUCCESS: Command execution completed');
-        console.groupEnd();
+        // console.log('8️⃣ ✅ SUCCESS: Command execution completed');
+        // console.groupEnd();
       } catch (error) {
         console.error('❌ ERROR: Command execution failed:', error);
         if (term.current) {
@@ -243,7 +243,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
           writePrompt();
         }
         currentProcess.current = null;
-        console.groupEnd();
+        // console.groupEnd();
       }
     },
     [webContainerInstance, writePrompt]
@@ -251,68 +251,68 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
 
   const handleTerminalInput = useCallback(
     (data: string) => {
-      console.group('⌨️ Terminal Input Flow');
+      // console.group('⌨️ Terminal Input Flow');
 
-      console.log('1️⃣ Input Received:', {
-        data: data,
-        dataLength: data.length,
-        charCode: data.charCodeAt(0),
-        hasTerminal: !!term.current,
-      });
+      // console.log('1️⃣ Input Received:', {
+      //   data: data,
+      //   dataLength: data.length,
+      //   charCode: data.charCodeAt(0),
+      //   hasTerminal: !!term.current,
+      // });
 
       if (!term.current) {
-        console.log('1️⃣ ❌ BLOCKED: No terminal available');
-        console.groupEnd();
+        // console.log('1️⃣ ❌ BLOCKED: No terminal available');
+        // console.groupEnd();
         return;
       }
 
       // Handle special characters
       switch (data) {
         case '\r': // Enter
-          console.log('2️⃣ ⌨️ Special Key: Enter pressed');
+          // console.log('2️⃣ ⌨️ Special Key: Enter pressed');
 
-          console.log('3️⃣ 🚀 Executing command:', {
-            command: currentLine.current,
-            commandLength: currentLine.current.length,
-          });
+          // console.log('3️⃣ 🚀 Executing command:', {
+          //   command: currentLine.current,
+          //   commandLength: currentLine.current.length,
+          // });
           executeCommand(currentLine.current);
-          console.groupEnd();
+          // console.groupEnd();
           break;
 
         case '\u007F': // Backspace
-          console.log('2️⃣ ⌨️ Special Key: Backspace pressed');
+          // console.log('2️⃣ ⌨️ Special Key: Backspace pressed');
           if (cursorPosition.current > 0) {
             currentLine.current = currentLine.current.slice(0, cursorPosition.current - 1) + currentLine.current.slice(cursorPosition.current);
             cursorPosition.current--;
 
-            console.log('3️⃣ ✅ Character removed:', {
-              newLine: currentLine.current,
-              newCursorPosition: cursorPosition.current,
-            });
+            // console.log('3️⃣ ✅ Character removed:', {
+            //   newLine: currentLine.current,
+            //   newCursorPosition: cursorPosition.current,
+            // });
             // Update terminal display
             term.current.write('\b \b');
           } else {
-            console.log('3️⃣ ℹ️ Backspace ignored - at beginning of line');
+            // console.log('3️⃣ ℹ️ Backspace ignored - at beginning of line');
           }
-          console.groupEnd();
+          // console.groupEnd();
           break;
 
         case '\u0003': // Ctrl+C
-          console.log('2️⃣ ⌨️ Special Key: Ctrl+C pressed');
+          // console.log('2️⃣ ⌨️ Special Key: Ctrl+C pressed');
           if (currentProcess.current) {
-            console.log('3️⃣ 🛑 Killing current process');
+            // console.log('3️⃣ 🛑 Killing current process');
             currentProcess.current.kill();
             currentProcess.current = null;
           }
           term.current.writeln('^C');
           writePrompt();
 
-          console.log('4️⃣ ✅ Process killed and prompt shown');
-          console.groupEnd();
+          // console.log('4️⃣ ✅ Process killed and prompt shown');
+          // console.groupEnd();
           break;
 
         case '\u001b[A': // Up arrow
-          console.log('2️⃣ ⌨️ Special Key: Up arrow pressed');
+          // console.log('2️⃣ ⌨️ Special Key: Up arrow pressed');
           if (commandHistory.current.length > 0) {
             if (historyIndex.current === -1) {
               historyIndex.current = commandHistory.current.length - 1;
@@ -320,10 +320,10 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
               historyIndex.current--;
             }
 
-            console.log('3️⃣ 📚 History navigation:', {
-              historyIndex: historyIndex.current,
-              totalHistory: commandHistory.current.length,
-            });
+            // console.log('3️⃣ 📚 History navigation:', {
+            //   historyIndex: historyIndex.current,
+            //   totalHistory: commandHistory.current.length,
+            // });
             // Clear current line and write history command
             const historyCommand = commandHistory.current[historyIndex.current];
             term.current.write('\r$ ' + ' '.repeat(currentLine.current.length) + '\r$ ');
@@ -331,27 +331,27 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
             currentLine.current = historyCommand;
             cursorPosition.current = historyCommand.length;
 
-            console.log('4️⃣ ✅ History command loaded:', {
-              command: historyCommand,
-              cursorPosition: cursorPosition.current,
-            });
+            // console.log('4️⃣ ✅ History command loaded:', {
+            //   command: historyCommand,
+            //   cursorPosition: cursorPosition.current,
+            // });
           } else {
-            console.log('3️⃣ ℹ️ No command history available');
+            // console.log('3️⃣ ℹ️ No command history available');
           }
-          console.groupEnd();
+          // console.groupEnd();
           break;
 
         case '\u001b[B': // Down arrow
-          console.log('2️⃣ ⌨️ Special Key: Down arrow pressed');
+          // console.log('2️⃣ ⌨️ Special Key: Down arrow pressed');
           if (historyIndex.current !== -1) {
             if (historyIndex.current < commandHistory.current.length - 1) {
               historyIndex.current++;
               const historyCommand = commandHistory.current[historyIndex.current];
 
-              console.log('3️⃣ 📚 History navigation:', {
-                historyIndex: historyIndex.current,
-                command: historyCommand,
-              });
+              // console.log('3️⃣ 📚 History navigation:', {
+              //   historyIndex: historyIndex.current,
+              //   command: historyCommand,
+              // });
               term.current.write('\r$ ' + ' '.repeat(currentLine.current.length) + '\r$ ');
               term.current.write(historyCommand);
               currentLine.current = historyCommand;
@@ -359,41 +359,41 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
             } else {
               historyIndex.current = -1;
 
-              console.log('3️⃣ 📚 History navigation: Back to empty line');
+              // console.log('3️⃣ 📚 History navigation: Back to empty line');
               term.current.write('\r$ ' + ' '.repeat(currentLine.current.length) + '\r$ ');
               currentLine.current = '';
               cursorPosition.current = 0;
             }
 
-            console.log('4️⃣ ✅ History command loaded');
+            // console.log('4️⃣ ✅ History command loaded');
           } else {
-            console.log('3️⃣ ℹ️ No history navigation active');
+            // console.log('3️⃣ ℹ️ No history navigation active');
           }
-          console.groupEnd();
+          // console.groupEnd();
           break;
 
         default:
           // Regular character input
           if (data >= ' ' || data === '\t') {
-            console.log('2️⃣ ⌨️ Regular Character:', {
-              character: data,
-              charCode: data.charCodeAt(0),
-            });
+            // console.log('2️⃣ ⌨️ Regular Character:', {
+            //   character: data,
+            //   charCode: data.charCodeAt(0),
+            // });
             currentLine.current = currentLine.current.slice(0, cursorPosition.current) + data + currentLine.current.slice(cursorPosition.current);
             cursorPosition.current++;
             term.current.write(data);
 
-            console.log('3️⃣ ✅ Character added:', {
-              newLine: currentLine.current,
-              newCursorPosition: cursorPosition.current,
-            });
+            // console.log('3️⃣ ✅ Character added:', {
+            //   newLine: currentLine.current,
+            //   newCursorPosition: cursorPosition.current,
+            // });
           } else {
-            console.log('2️⃣ ℹ️ Ignored character:', {
-              character: data,
-              charCode: data.charCodeAt(0),
-            });
+            // console.log('2️⃣ ℹ️ Ignored character:', {
+            //   character: data,
+            //   charCode: data.charCodeAt(0),
+            // });
           }
-          console.groupEnd();
+          // console.groupEnd();
           break;
       }
     },
@@ -401,18 +401,18 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
   );
 
   const initializeTerminal = useCallback(async () => {
-    console.group('🖥️ Terminal Initialization Flow');
+    // console.group('🖥️ Terminal Initialization Flow');
 
-    console.log('1️⃣ Initialization Check:', {
-      hasTerminalRef: !!terminalRef.current,
-      hasExistingTerm: !!term.current,
-      isClientSide: typeof window !== 'undefined',
-      retryAttempt: retryCount + 1,
-    });
+    // console.log('1️⃣ Initialization Check:', {
+    //   hasTerminalRef: !!terminalRef.current,
+    //   hasExistingTerm: !!term.current,
+    //   isClientSide: typeof window !== 'undefined',
+    //   retryAttempt: retryCount + 1,
+    // });
 
     if (!terminalRef.current || term.current || typeof window === 'undefined') {
-      console.log('1️⃣ ❌ BLOCKED: Cannot initialize terminal - missing requirements');
-      console.groupEnd();
+      // console.log('1️⃣ ❌ BLOCKED: Cannot initialize terminal - missing requirements');
+      // console.groupEnd();
       return;
     }
 
@@ -420,19 +420,19 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
       setIsLoading(true);
       setError(null);
 
-      console.log('2️⃣ ✅ PROCEEDING: Starting terminal initialization');
+      // console.log('2️⃣ ✅ PROCEEDING: Starting terminal initialization');
 
       // Dynamically import xterm libraries only on client side
 
-      console.log('3️⃣ 📦 Loading xterm libraries...');
+      // console.log('3️⃣ 📦 Loading xterm libraries...');
       const { Terminal } = await import('xterm');
       const { FitAddon } = await import('xterm-addon-fit');
       const { WebLinksAddon } = await import('xterm-addon-web-links');
       const { SearchAddon } = await import('xterm-addon-search');
 
-      console.log('3️⃣ ✅ SUCCESS: xterm libraries loaded successfully');
+      // console.log('3️⃣ ✅ SUCCESS: xterm libraries loaded successfully');
 
-      console.log('4️⃣ 🔧 Creating terminal instance...');
+      // console.log('4️⃣ 🔧 Creating terminal instance...');
       const terminal = new Terminal({
         cursorBlink: true,
         fontFamily: '"Fira Code", "JetBrains Mono", "Consolas", monospace',
@@ -448,7 +448,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
 
       // Add addons
 
-      console.log('5️⃣ 🔌 Loading terminal addons...');
+      // console.log('5️⃣ 🔌 Loading terminal addons...');
       const fitAddonInstance = new FitAddon();
       const webLinksAddon = new WebLinksAddon();
       const searchAddonInstance = new SearchAddon();
@@ -457,7 +457,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
       terminal.loadAddon(webLinksAddon);
       terminal.loadAddon(searchAddonInstance);
 
-      console.log('6️⃣ 🖼️ Opening terminal in DOM...');
+      // console.log('6️⃣ 🖼️ Opening terminal in DOM...');
       terminal.open(terminalRef.current);
 
       fitAddon.current = fitAddonInstance;
@@ -467,13 +467,13 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
       // Handle terminal input
       terminal.onData(handleTerminalInput);
 
-      console.log('7️⃣ ⌨️ Terminal input handler attached');
+      // console.log('7️⃣ ⌨️ Terminal input handler attached');
 
       // Initial fit
       setTimeout(() => {
         fitAddonInstance.fit();
 
-        console.log('8️⃣ 📏 Terminal fitted to container');
+        // console.log('8️⃣ 📏 Terminal fitted to container');
       }, 100);
 
       // Welcome message
@@ -481,17 +481,17 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
       terminal.writeln("Type 'help' for available commands");
       writePrompt();
 
-      console.log('9️⃣ 💬 Welcome message displayed');
+      // console.log('9️⃣ 💬 Welcome message displayed');
 
-      console.log('🔟 ✅ SUCCESS: Terminal initialized successfully', {
-        retryCount: 0,
-        isLoaded: true,
-        isLoading: false,
-      });
+      // console.log('🔟 ✅ SUCCESS: Terminal initialized successfully', {
+      //   retryCount: 0,
+      //   isLoaded: true,
+      //   isLoading: false,
+      // });
       setIsLoaded(true);
       setIsLoading(false);
       setRetryCount(0);
-      console.groupEnd();
+      // console.groupEnd();
       return terminal;
     } catch (error) {
       console.error('❌ ERROR: Failed to initialize terminal:', error);
@@ -504,52 +504,52 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
       if (retryCount < 3) {
         const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
 
-        console.log(`🔄 RETRY: Retrying terminal initialization in ${delay}ms... (attempt ${retryCount + 1}/3)`);
+        // console.log(`🔄 RETRY: Retrying terminal initialization in ${delay}ms... (attempt ${retryCount + 1}/3)`);
         setTimeout(() => {
           setRetryCount(prev => prev + 1);
           initializeTerminal();
         }, delay);
       } else {
-        console.log('❌ FAILED: Maximum retry attempts reached');
+        // console.log('❌ FAILED: Maximum retry attempts reached');
       }
-      console.groupEnd();
+      // console.groupEnd();
     }
   }, [theme, handleTerminalInput, writePrompt, retryCount]);
 
   const connectToWebContainer = useCallback(async () => {
-    console.group('🔗 WebContainer Connection Flow');
+    // console.group('🔗 WebContainer Connection Flow');
 
-    console.log('1️⃣ Connection Check:', {
-      hasWebContainerInstance: !!webContainerInstance,
-      hasTerminal: !!term.current,
-      isConnected: isConnected,
-    });
+    // console.log('1️⃣ Connection Check:', {
+    //   hasWebContainerInstance: !!webContainerInstance,
+    //   hasTerminal: !!term.current,
+    //   isConnected: isConnected,
+    // });
 
     if (!webContainerInstance || !term.current) {
-      console.log('1️⃣ ❌ BLOCKED: Cannot connect - missing WebContainer instance or terminal');
-      console.groupEnd();
+      // console.log('1️⃣ ❌ BLOCKED: Cannot connect - missing WebContainer instance or terminal');
+      // console.groupEnd();
       return;
     }
 
     try {
-      console.log('2️⃣ ✅ PROCEEDING: Connecting to WebContainer');
+      // console.log('2️⃣ ✅ PROCEEDING: Connecting to WebContainer');
       setIsConnected(true);
       term.current.writeln('✅ Connected to WebContainer');
       term.current.writeln('Ready to execute commands');
       writePrompt();
 
-      console.log('3️⃣ ✅ SUCCESS: WebContainer connection established');
-      console.groupEnd();
+      // console.log('3️⃣ ✅ SUCCESS: WebContainer connection established');
+      // console.groupEnd();
     } catch (error) {
       console.error('❌ ERROR: WebContainer connection failed:', error);
       setIsConnected(false);
       term.current.writeln('❌ Failed to connect to WebContainer');
-      console.groupEnd();
+      // console.groupEnd();
     }
   }, [webContainerInstance, writePrompt, isConnected]);
 
   const retryInitialization = useCallback(() => {
-    console.log('Manual retry requested');
+    // console.log('Manual retry requested');
     setRetryCount(0);
     setError(null);
     setIsLoaded(false);
@@ -623,29 +623,29 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
   }, []);
 
   useEffect(() => {
-    console.group('🔄 Terminal useEffect - Initialization');
+    // console.group('🔄 Terminal useEffect - Initialization');
 
-    console.log('1️⃣ Effect Triggered:', {
-      isClientSide: typeof window !== 'undefined',
-      hasTerminalRef: !!terminalRef.current,
-    });
+    // console.log('1️⃣ Effect Triggered:', {
+    //   isClientSide: typeof window !== 'undefined',
+    //   hasTerminalRef: !!terminalRef.current,
+    // });
 
     if (typeof window !== 'undefined') {
-      console.log('2️⃣ ✅ PROCEEDING: Starting terminal initialization');
+      // console.log('2️⃣ ✅ PROCEEDING: Starting terminal initialization');
       initializeTerminal();
     } else {
-      console.log('2️⃣ ❌ BLOCKED: Not client-side, skipping initialization');
+      // console.log('2️⃣ ❌ BLOCKED: Not client-side, skipping initialization');
     }
 
     // Handle resize
 
-    console.log('3️⃣ 📏 Setting up resize observer');
+    // console.log('3️⃣ 📏 Setting up resize observer');
     const resizeObserver = new ResizeObserver(() => {
       if (fitAddon.current) {
         setTimeout(() => {
           fitAddon.current?.fit();
 
-          console.log('📏 Terminal resized and fitted');
+          // console.log('📏 Terminal resized and fitted');
         }, 100);
       }
     });
@@ -653,16 +653,16 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
     if (terminalRef.current) {
       resizeObserver.observe(terminalRef.current);
 
-      console.log('4️⃣ ✅ Resize observer attached to terminal ref');
+      // console.log('4️⃣ ✅ Resize observer attached to terminal ref');
     } else {
-      console.log('4️⃣ ⚠️ WARNING: No terminal ref available for resize observer');
+      // console.log('4️⃣ ⚠️ WARNING: No terminal ref available for resize observer');
     }
 
-    console.log('5️⃣ ✅ SUCCESS: useEffect setup completed');
-    console.groupEnd();
+    // console.log('5️⃣ ✅ SUCCESS: useEffect setup completed');
+    // console.groupEnd();
 
     return () => {
-      console.log('🧹 CLEANUP: Terminal useEffect cleanup');
+      // console.log('🧹 CLEANUP: Terminal useEffect cleanup');
       resizeObserver.disconnect();
       if (currentProcess.current) {
         currentProcess.current.kill();
@@ -678,23 +678,23 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
   }, [initializeTerminal]);
 
   useEffect(() => {
-    console.group('🔗 WebContainer Connection useEffect');
+    // console.group('🔗 WebContainer Connection useEffect');
 
-    console.log('1️⃣ Effect Triggered:', {
-      hasWebContainerInstance: !!webContainerInstance,
-      hasTerminal: !!term.current,
-      isConnected: isConnected,
-    });
+    // console.log('1️⃣ Effect Triggered:', {
+    //   hasWebContainerInstance: !!webContainerInstance,
+    //   hasTerminal: !!term.current,
+    //   isConnected: isConnected,
+    // });
 
     if (webContainerInstance && term.current && !isConnected) {
-      console.log('2️⃣ ✅ PROCEEDING: Connecting to WebContainer');
+      // console.log('2️⃣ ✅ PROCEEDING: Connecting to WebContainer');
       connectToWebContainer();
     } else {
-      console.log('2️⃣ ❌ BLOCKED: Cannot connect to WebContainer', {
-        reason: !webContainerInstance ? 'No WebContainer instance' : !term.current ? 'No terminal' : isConnected ? 'Already connected' : 'Unknown',
-      });
+      // console.log('2️⃣ ❌ BLOCKED: Cannot connect to WebContainer', {
+      //   reason: !webContainerInstance ? 'No WebContainer instance' : !term.current ? 'No terminal' : isConnected ? 'Already connected' : 'Unknown',
+      // });
     }
-    console.groupEnd();
+    // console.groupEnd();
   }, [webContainerInstance, connectToWebContainer, isConnected]);
 
   // Note: We always render the terminal container so the ref exists early;

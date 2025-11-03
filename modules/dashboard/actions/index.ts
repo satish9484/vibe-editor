@@ -123,7 +123,7 @@ export const createPlayground = async (data: {
       const startersPath = templatePaths[canonicalTemplate];
       const normalizedStartersPath = startersPath.replace(/^[\\\/]+/, '');
       const inputPath = path.join(process.cwd(), normalizedStartersPath);
-      // console.log('📁 Scanning and saving starter tree to templateFiles.content from:', inputPath);
+      // console.log('Template path:', inputPath);
       const scanned: TemplateFolder = await scanTemplateDirectory(inputPath);
       const jsonContent: Prisma.InputJsonValue = JSON.parse(JSON.stringify(scanned));
       await db.templateFile.create({
@@ -178,7 +178,7 @@ export const editProjectById = async (id: string, data: { title: string; descrip
     });
     revalidatePath('/dashboard');
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 

@@ -140,9 +140,11 @@ const TemplateSelectionModal = ({ isOpen, onClose, onSubmit }: TemplateSelection
       };
 
       const template = templates.find(t => t.id === selectedTemplate);
+      const mappedTemplate = templateMap[selectedTemplate] || 'REACT';
+
       onSubmit({
         title: projectName || `New ${template?.name} Project`,
-        template: templateMap[selectedTemplate] || 'REACT',
+        template: mappedTemplate,
         description: template?.description,
       });
       onClose();
@@ -194,7 +196,11 @@ const TemplateSelectionModal = ({ isOpen, onClose, onSubmit }: TemplateSelection
                   <Input placeholder='Search templates...' value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className='pl-10' />
                 </div>
 
-                <Tabs defaultValue='all' className='w-full sm:w-auto' onValueChange={value => setCategory(value as any)}>
+                <Tabs
+                  defaultValue='all'
+                  className='w-full sm:w-auto'
+                  onValueChange={value => setCategory(value as 'all' | 'frontend' | 'backend' | 'fullstack')}
+                >
                   <TabsList className='grid grid-cols-4 w-full sm:w-[400px]'>
                     <TabsTrigger value='all'>All</TabsTrigger>
                     <TabsTrigger value='frontend'>Frontend</TabsTrigger>
