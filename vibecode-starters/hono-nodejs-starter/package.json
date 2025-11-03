@@ -1,4 +1,28 @@
 {
+  "name": "@vibecode-starters/hono-nodejs-starter",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -b",
+    "start": "node dist/index.js",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "hono": "^4.6.6"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "eslint": "^9",
+    "globals": "^15",
+    "tsx": "^4",
+    "typescript": "^5",
+    "typescript-eslint": "^8"
+  }
+}
+
+{
   "name": "hono-starter",
   "version": "1.0.0",
   "description": "A Hono.js starter template",

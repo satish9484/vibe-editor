@@ -1,3 +1,12 @@
+export default function Page() {
+  return (
+    <main style={{ padding: 24 }}>
+      <h1>@vibecode-starters/nextjs-new</h1>
+      <p>Next.js 15 App Router starter is running.</p>
+    </main>
+  );
+}
+
 export default function Home() {
   return (
     <main className='flex min-h-screen flex-col items-center justify-between p-24'>

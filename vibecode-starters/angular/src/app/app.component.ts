@@ -1,3 +1,17 @@
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  template: `
+    <div style="padding:24px">
+      <h1>@vibecode-starters/angular</h1>
+      <p>Angular starter is running.</p>
+    </div>
+  `,
+})
+export class AppComponent {}
+
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';

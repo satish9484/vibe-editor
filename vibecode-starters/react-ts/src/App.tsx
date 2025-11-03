@@ -1,3 +1,12 @@
+export default function App() {
+  return (
+    <div style={{ padding: 24 }}>
+      <h1>@vibecode-starters/react-ts</h1>
+      <p>React + Vite + TypeScript starter is running.</p>
+    </div>
+  );
+}
+
 import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'

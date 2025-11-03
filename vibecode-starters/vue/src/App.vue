@@ -1,4 +1,15 @@
 <template>
+  <div style="padding:24px">
+    <h1>@vibecode-starters/vue</h1>
+    <p>Vue 3 + Vite + TypeScript starter is running.</p>
+  </div>
+  
+</template>
+
+<script setup lang="ts">
+</script>
+
+<template>
   <div id="app">
     <header>
       <h1>Welcome to Vue.js!</h1>
