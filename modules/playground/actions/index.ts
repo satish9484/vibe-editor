@@ -1,14 +1,15 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { TemplateFolder } from '../lib/path-to-json';
 import { currentUser } from '@/modules/auth/actions';
+import { TemplateFolder } from '../lib/path-to-json';
 
 export const getPlaygroundById = async (id: string) => {
   try {
     const playground = await db.playground.findUnique({
       where: { id },
       select: {
+        template: true,
         title: true,
         templateFiles: {
           select: {
@@ -19,7 +20,7 @@ export const getPlaygroundById = async (id: string) => {
     });
     return playground;
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 

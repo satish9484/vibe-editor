@@ -54,6 +54,7 @@ const WebContainerPreview = ({
   // Function to stop the development server
   const stopServer = useCallback(() => {
     console.group('🛑 Stop Server Flow');
+
     console.log('1️⃣ Stop Request:', {
       hasServerProcess: !!serverProcessRef.current,
       hasListener: !!serverReadyListenerRef.current,
@@ -68,6 +69,7 @@ const WebContainerPreview = ({
       console.log('2️⃣ 🛑 Stopping server process');
       try {
         serverProcessRef.current.kill();
+
         console.log('2️⃣ ✅ Server process killed successfully');
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal('🛑 Development server stopped\r\n');
@@ -254,6 +256,7 @@ const WebContainerPreview = ({
 
             setCurrentStep(4);
             setLoadingState(prev => ({ ...prev, starting: true }));
+
             console.log('5️⃣ ✅ SUCCESS: Reconnected to existing server');
             return;
           }
@@ -262,6 +265,7 @@ const WebContainerPreview = ({
         }
 
         // Step-1 transform data
+
         /* console.log('4️⃣ 🔄 Step 1: Transforming template data'); */
         setLoadingState(prev => ({ ...prev, transforming: true }));
         setCurrentStep(1);
@@ -271,6 +275,7 @@ const WebContainerPreview = ({
         }
 
         // @ts-ignore
+
         console.log('4️⃣ 📋 Transforming template data:', {
           hasTemplateData: !!templateData,
           folderName: templateData.folderName,
@@ -278,6 +283,7 @@ const WebContainerPreview = ({
           firstItem: templateData.items?.[0],
         });
         const files = transformToWebContainerFormat(templateData);
+
         console.log('4️⃣ ✅ Template data transformed:', {
           fileCount: Object.keys(files).length,
           fileStructure: Object.keys(files),
@@ -290,6 +296,7 @@ const WebContainerPreview = ({
         setCurrentStep(2);
 
         //  Step-2 Mount Files
+
         /* console.log('5️⃣ 📁 Step 2: Mounting files to WebContainer'); */
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal('📁 Mounting files to WebContainer...\r\n');
@@ -299,6 +306,7 @@ const WebContainerPreview = ({
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal('✅ Files mounted successfully\r\n');
         }
+
         /* console.log('5️⃣ ✅ Files mounted successfully'); */
         setLoadingState(prev => ({
           ...prev,
@@ -308,6 +316,7 @@ const WebContainerPreview = ({
         setCurrentStep(3);
 
         // Step-3 Install dependencies (skip if node_modules already present)
+
         /* console.log('6️⃣ 📦 Step 3: Installing dependencies'); */
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal('📦 Installing dependencies...\r\n');
@@ -317,6 +326,7 @@ const WebContainerPreview = ({
         try {
           // Check if node_modules exists inside the WebContainer FS
           await instance.fs.readdir('node_modules');
+
           /* console.log('6️⃣ ⚡ node_modules detected - skipping install'); */
           if (terminalRef.current?.writeToTerminal) {
             terminalRef.current.writeToTerminal('⚡ Skipping install (node_modules already present)\r\n');
@@ -324,6 +334,7 @@ const WebContainerPreview = ({
         } catch {
           // node_modules not present -> run install
           const installProcess = await instance.spawn('npm', ['install']);
+
           /* console.log('6️⃣ 🚀 npm install process spawned'); */
 
           installProcess.output.pipeTo(
@@ -348,6 +359,7 @@ const WebContainerPreview = ({
           if (terminalRef.current?.writeToTerminal) {
             terminalRef.current.writeToTerminal('✅ Dependencies installed successfully\r\n');
           }
+
           /* console.log('7️⃣ ✅ Dependencies installed successfully'); */
         }
 
@@ -359,6 +371,7 @@ const WebContainerPreview = ({
         setCurrentStep(4);
 
         // STEP-4 Start The Server
+
         /* console.log('8️⃣ 🚀 Step 4: Starting development server'); */
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal('🚀 Starting development server...\r\n');
@@ -377,6 +390,7 @@ const WebContainerPreview = ({
 
         const startProcess = await instance.spawn(startCommand.command, startCommand.args);
         serverProcessRef.current = startProcess;
+
         /* console.log('8️⃣ 🚀 Server process spawned and stored'); */
 
         // Store the listener function so we can remove it later
@@ -398,6 +412,7 @@ const WebContainerPreview = ({
             // @ts-ignore
             (window as any).__APP_READY = true;
           } catch {}
+
           console.log('🔟 ✅ SUCCESS: WebContainer setup completed');
         };
 
@@ -414,6 +429,7 @@ const WebContainerPreview = ({
             },
           })
         );
+
         /* console.log('9️⃣ 📤 Server output stream connected'); */
       } catch (err) {
         console.error('❌ ERROR: WebContainer setup failed:', err);
@@ -467,6 +483,7 @@ const WebContainerPreview = ({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.ctrlKey && event.key === 'c' && isSetupComplete) {
         event.preventDefault();
+
         /* console.log('⌨️ Keyboard shortcut: Ctrl+C pressed - stopping server'); */
         stopServer();
       }

@@ -140,6 +140,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
             if (AI_REQUEST_GROUP_LOG) console.groupEnd();
             return;
           }
+
           console.log('3️⃣ API Response Data:', {
             hasSuggestion: !!data.suggestion,
             suggestionLength: data.suggestion ? data.suggestion.length : 0,
@@ -148,6 +149,7 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
 
           if (data.suggestion) {
             const suggestionText = data.suggestion.trim();
+
             console.log('4️⃣ ✅ SUCCESS: Setting suggestion state', {
               suggestionLength: suggestionText.length,
               position: `${cursorPosition.lineNumber}:${cursorPosition.column}`,

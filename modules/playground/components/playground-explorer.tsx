@@ -237,6 +237,7 @@ function TemplateNode({
             isActive={isSelected}
             onClick={() => {
               console.group('📁 File Selection Flow');
+
               console.log('1️⃣ File clicked:', {
                 filename: file.filename,
                 extension: file.fileExtension,
@@ -244,8 +245,10 @@ function TemplateNode({
                 isSelected: isSelected,
                 hasOnFileSelect: !!onFileSelect,
               });
+
               console.log('2️⃣ Calling onFileSelect...');
               onFileSelect?.(file);
+
               console.log('3️⃣ ✅ SUCCESS: File selection completed');
               console.groupEnd();
             }}

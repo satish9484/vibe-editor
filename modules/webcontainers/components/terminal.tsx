@@ -119,6 +119,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
   const executeCommand = useCallback(
     async (command: string) => {
       console.group('⚡ Command Execution Flow');
+
       console.log('1️⃣ Command Received:', {
         command: command,
         commandLength: command.length,
@@ -135,6 +136,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
       // Add to history
       if (command.trim() && commandHistory.current[commandHistory.current.length - 1] !== command) {
         commandHistory.current.push(command);
+
         console.log('2️⃣ 📝 Command added to history:', {
           historyLength: commandHistory.current.length,
           command: command.trim(),
@@ -148,6 +150,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
           console.log('2️⃣ 🧹 Built-in Command: Clear terminal');
           term.current.clear();
           writePrompt();
+
           console.log('3️⃣ ✅ SUCCESS: Terminal cleared');
           console.groupEnd();
           return;
@@ -159,6 +162,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
             term.current!.writeln(`  ${index + 1}  ${cmd}`);
           });
           writePrompt();
+
           console.log('3️⃣ ✅ SUCCESS: History displayed');
           console.groupEnd();
           return;
@@ -175,6 +179,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
         const parts = command.trim().split(' ');
         const cmd = parts[0];
         const args = parts.slice(1);
+
         console.log('2️⃣ 🔍 Parsing command:', {
           command: cmd,
           arguments: args,
@@ -183,6 +188,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
 
         // Execute in WebContainer
         term.current.writeln('');
+
         console.log('3️⃣ 🚀 Spawning process in WebContainer:', {
           command: cmd,
           args: args,
@@ -198,6 +204,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
         });
 
         currentProcess.current = process;
+
         console.log('4️⃣ 📡 Process spawned successfully');
 
         // Handle process output
@@ -210,12 +217,15 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
             },
           })
         );
+
         console.log('5️⃣ 📤 Output stream connected');
 
         // Wait for process to complete
+
         console.log('6️⃣ ⏳ Waiting for process to complete...');
         const exitCode = await process.exit;
         currentProcess.current = null;
+
         console.log('7️⃣ ✅ Process completed:', {
           exitCode: exitCode,
           success: exitCode === 0,
@@ -223,6 +233,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
 
         // Show new prompt
         writePrompt();
+
         console.log('8️⃣ ✅ SUCCESS: Command execution completed');
         console.groupEnd();
       } catch (error) {
@@ -241,6 +252,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
   const handleTerminalInput = useCallback(
     (data: string) => {
       console.group('⌨️ Terminal Input Flow');
+
       console.log('1️⃣ Input Received:', {
         data: data,
         dataLength: data.length,
@@ -258,6 +270,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
       switch (data) {
         case '\r': // Enter
           console.log('2️⃣ ⌨️ Special Key: Enter pressed');
+
           console.log('3️⃣ 🚀 Executing command:', {
             command: currentLine.current,
             commandLength: currentLine.current.length,
@@ -271,6 +284,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
           if (cursorPosition.current > 0) {
             currentLine.current = currentLine.current.slice(0, cursorPosition.current - 1) + currentLine.current.slice(cursorPosition.current);
             cursorPosition.current--;
+
             console.log('3️⃣ ✅ Character removed:', {
               newLine: currentLine.current,
               newCursorPosition: cursorPosition.current,
@@ -292,6 +306,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
           }
           term.current.writeln('^C');
           writePrompt();
+
           console.log('4️⃣ ✅ Process killed and prompt shown');
           console.groupEnd();
           break;
@@ -304,6 +319,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
             } else if (historyIndex.current > 0) {
               historyIndex.current--;
             }
+
             console.log('3️⃣ 📚 History navigation:', {
               historyIndex: historyIndex.current,
               totalHistory: commandHistory.current.length,
@@ -314,6 +330,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
             term.current.write(historyCommand);
             currentLine.current = historyCommand;
             cursorPosition.current = historyCommand.length;
+
             console.log('4️⃣ ✅ History command loaded:', {
               command: historyCommand,
               cursorPosition: cursorPosition.current,
@@ -330,6 +347,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
             if (historyIndex.current < commandHistory.current.length - 1) {
               historyIndex.current++;
               const historyCommand = commandHistory.current[historyIndex.current];
+
               console.log('3️⃣ 📚 History navigation:', {
                 historyIndex: historyIndex.current,
                 command: historyCommand,
@@ -340,11 +358,13 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
               cursorPosition.current = historyCommand.length;
             } else {
               historyIndex.current = -1;
+
               console.log('3️⃣ 📚 History navigation: Back to empty line');
               term.current.write('\r$ ' + ' '.repeat(currentLine.current.length) + '\r$ ');
               currentLine.current = '';
               cursorPosition.current = 0;
             }
+
             console.log('4️⃣ ✅ History command loaded');
           } else {
             console.log('3️⃣ ℹ️ No history navigation active');
@@ -362,6 +382,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
             currentLine.current = currentLine.current.slice(0, cursorPosition.current) + data + currentLine.current.slice(cursorPosition.current);
             cursorPosition.current++;
             term.current.write(data);
+
             console.log('3️⃣ ✅ Character added:', {
               newLine: currentLine.current,
               newCursorPosition: cursorPosition.current,
@@ -381,6 +402,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
 
   const initializeTerminal = useCallback(async () => {
     console.group('🖥️ Terminal Initialization Flow');
+
     console.log('1️⃣ Initialization Check:', {
       hasTerminalRef: !!terminalRef.current,
       hasExistingTerm: !!term.current,
@@ -397,9 +419,11 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
     try {
       setIsLoading(true);
       setError(null);
+
       console.log('2️⃣ ✅ PROCEEDING: Starting terminal initialization');
 
       // Dynamically import xterm libraries only on client side
+
       console.log('3️⃣ 📦 Loading xterm libraries...');
       const { Terminal } = await import('xterm');
       const { FitAddon } = await import('xterm-addon-fit');
@@ -423,6 +447,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
       });
 
       // Add addons
+
       console.log('5️⃣ 🔌 Loading terminal addons...');
       const fitAddonInstance = new FitAddon();
       const webLinksAddon = new WebLinksAddon();
@@ -441,11 +466,13 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
 
       // Handle terminal input
       terminal.onData(handleTerminalInput);
+
       console.log('7️⃣ ⌨️ Terminal input handler attached');
 
       // Initial fit
       setTimeout(() => {
         fitAddonInstance.fit();
+
         console.log('8️⃣ 📏 Terminal fitted to container');
       }, 100);
 
@@ -453,6 +480,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
       terminal.writeln('🚀 WebContainer Terminal');
       terminal.writeln("Type 'help' for available commands");
       writePrompt();
+
       console.log('9️⃣ 💬 Welcome message displayed');
 
       console.log('🔟 ✅ SUCCESS: Terminal initialized successfully', {
@@ -475,6 +503,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
       // Auto-retry up to 3 times with exponential backoff
       if (retryCount < 3) {
         const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+
         console.log(`🔄 RETRY: Retrying terminal initialization in ${delay}ms... (attempt ${retryCount + 1}/3)`);
         setTimeout(() => {
           setRetryCount(prev => prev + 1);
@@ -489,6 +518,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
 
   const connectToWebContainer = useCallback(async () => {
     console.group('🔗 WebContainer Connection Flow');
+
     console.log('1️⃣ Connection Check:', {
       hasWebContainerInstance: !!webContainerInstance,
       hasTerminal: !!term.current,
@@ -507,6 +537,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
       term.current.writeln('✅ Connected to WebContainer');
       term.current.writeln('Ready to execute commands');
       writePrompt();
+
       console.log('3️⃣ ✅ SUCCESS: WebContainer connection established');
       console.groupEnd();
     } catch (error) {
@@ -593,6 +624,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
 
   useEffect(() => {
     console.group('🔄 Terminal useEffect - Initialization');
+
     console.log('1️⃣ Effect Triggered:', {
       isClientSide: typeof window !== 'undefined',
       hasTerminalRef: !!terminalRef.current,
@@ -606,11 +638,13 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
     }
 
     // Handle resize
+
     console.log('3️⃣ 📏 Setting up resize observer');
     const resizeObserver = new ResizeObserver(() => {
       if (fitAddon.current) {
         setTimeout(() => {
           fitAddon.current?.fit();
+
           console.log('📏 Terminal resized and fitted');
         }, 100);
       }
@@ -618,6 +652,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
 
     if (terminalRef.current) {
       resizeObserver.observe(terminalRef.current);
+
       console.log('4️⃣ ✅ Resize observer attached to terminal ref');
     } else {
       console.log('4️⃣ ⚠️ WARNING: No terminal ref available for resize observer');
@@ -644,6 +679,7 @@ const TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({ webcontainer
 
   useEffect(() => {
     console.group('🔗 WebContainer Connection useEffect');
+
     console.log('1️⃣ Effect Triggered:', {
       hasWebContainerInstance: !!webContainerInstance,
       hasTerminal: !!term.current,

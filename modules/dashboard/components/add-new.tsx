@@ -27,11 +27,11 @@ const AddNewButton = () => {
     setSelectedTemplate(data);
 
     try {
-      console.group('🆕 Creating New Playground');
-      console.log('1️⃣ Playground data:', data);
+      // console.group('🆕 Creating New Playground');
+      // console.log('1️⃣ Playground data:', data);
 
       const res = await createPlayground(data);
-      console.log('2️⃣ Playground created:', res);
+      // console.log('2️⃣ Playground created:', res);
 
       if (!res || !res.id) {
         console.error('3️⃣ ❌ FAILED: No playground ID returned');
@@ -39,17 +39,17 @@ const AddNewButton = () => {
         return;
       }
 
-      console.log('3️⃣ ✅ SUCCESS: Navigating to playground', { id: res.id });
+      // console.log('3️⃣ ✅ SUCCESS: Navigating to playground', { id: res.id });
       toast.success('Playground Created successfully');
       setIsModalOpen(false);
       router.push(`/playground/${res.id}`);
-      console.groupEnd();
+      // console.groupEnd();
     } catch (error) {
       console.error('❌ ERROR: Failed to create playground:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.log('❌ Error details:', { errorMessage, error });
+      // console.log('❌ Error details:', { errorMessage, error });
       toast.error(`Failed to create playground: ${errorMessage}`);
-      console.groupEnd();
+      // console.groupEnd();
     }
   };
 

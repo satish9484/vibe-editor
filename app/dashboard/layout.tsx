@@ -3,17 +3,17 @@ import { getAllPlaygroundForUser } from '@/modules/dashboard/actions';
 import { DashboardSidebar } from '@/modules/dashboard/components/dashboard-sidebar';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  console.group('🏗️ Dashboard Layout Initialization');
-  console.log('1️⃣ Starting dashboard layout setup');
+  // console.group('🏗️ Dashboard Layout Initialization');
+  // console.log('1️⃣ Starting dashboard layout setup');
 
   const playgroundData = await getAllPlaygroundForUser();
-  console.log('2️⃣ Playground data fetched:', {
-    hasData: !!playgroundData,
-    dataType: typeof playgroundData,
-    isArray: Array.isArray(playgroundData),
-    dataLength: playgroundData?.length || 0,
-    rawData: playgroundData,
-  });
+  // console.log('2️⃣ Playground data fetched:', {
+  //   hasData: !!playgroundData,
+  //   dataType: typeof playgroundData,
+  //   isArray: Array.isArray(playgroundData),
+  //   dataLength: playgroundData?.length || 0,
+  //   rawData: playgroundData,
+  // });
 
   const technologyIconMap: Record<string, string> = {
     REACT: 'Zap',
@@ -33,14 +33,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
       icon: technologyIconMap[item.template] || 'Code2',
     })) || [];
 
-  console.log('3️⃣ Formatted playground data:', {
-    hasFormattedData: !!formattedPlaygroundData,
-    formattedDataLength: formattedPlaygroundData.length,
-    formattedData: formattedPlaygroundData,
-  });
+  // console.log('3️⃣ Formatted playground data:', {
+  //   hasFormattedData: !!formattedPlaygroundData,
+  //   formattedDataLength: formattedPlaygroundData.length,
+  //   formattedData: formattedPlaygroundData,
+  // });
 
-  console.log('4️⃣ Dashboard layout setup complete');
-  console.groupEnd();
+  // console.log('4️⃣ Dashboard layout setup complete');
+  // console.groupEnd();
 
   return (
     <SidebarProvider>

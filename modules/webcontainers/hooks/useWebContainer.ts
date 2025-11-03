@@ -39,6 +39,7 @@ export const useWebContainer = ({ templateData: _templateData }: UseWebContainer
 
     async function initializeWebContainer() {
       console.group('🚀 WebContainer Initialization Flow');
+
       console.log('1️⃣ Initialization Check:', {
         isRetrying: retryCount > 0,
         retryAttempt: retryCount + 1,
@@ -48,6 +49,7 @@ export const useWebContainer = ({ templateData: _templateData }: UseWebContainer
 
       try {
         setIsRetrying(retryCount > 0);
+
         console.log('2️⃣ ✅ PROCEEDING: Starting WebContainer initialization');
 
         // Dynamically import WebContainer only on client side
@@ -91,6 +93,7 @@ export const useWebContainer = ({ templateData: _templateData }: UseWebContainer
 
         console.log('3️⃣ 📦 Loading WebContainer API...');
         const { WebContainer } = await import('@webcontainer/api');
+
         console.log('3️⃣ ✅ SUCCESS: WebContainer API loaded');
 
         // Check if there's already a global initialization promise
@@ -133,6 +136,7 @@ export const useWebContainer = ({ templateData: _templateData }: UseWebContainer
           const initPromise = WebContainer.boot();
           (window as any).__webcontainerInitPromise = initPromise;
           webcontainerInstance = await initPromise;
+
           console.log('4️⃣ ✅ SUCCESS: WebContainer booted successfully');
 
           // Store the instance globally to prevent multiple instances
@@ -149,6 +153,7 @@ export const useWebContainer = ({ templateData: _templateData }: UseWebContainer
             // Use the global instance if it exists
             if ((window as any).__webcontainerInstance) {
               webcontainerInstance = (window as any).__webcontainerInstance;
+
               console.log('4️⃣ ✅ SUCCESS: Using existing global WebContainer instance');
             } else {
               console.log('4️⃣ ⚠️ No global instance found, this may be a real error');
@@ -177,6 +182,7 @@ export const useWebContainer = ({ templateData: _templateData }: UseWebContainer
         setError(null);
         setRetryCount(0);
         setIsRetrying(false);
+
         console.log('7️⃣ ✅ SUCCESS: WebContainer initialization completed', {
           retryCount: 0,
           isLoading: false,
@@ -187,6 +193,7 @@ export const useWebContainer = ({ templateData: _templateData }: UseWebContainer
       } catch (error) {
         console.error('❌ ERROR: Failed to initialize WebContainer:', error);
         const errorMessage = error instanceof Error ? error.message : 'Failed to initialize WebContainer';
+
         console.log('8️⃣ ❌ FAILED: WebContainer initialization error', {
           errorMessage: errorMessage,
           retryCount: retryCount,
@@ -204,6 +211,7 @@ export const useWebContainer = ({ templateData: _templateData }: UseWebContainer
           // Auto-retry up to 3 times with exponential backoff
           if (retryCount < 3) {
             const delay = Math.pow(2, retryCount) * 2000; // 2s, 4s, 8s
+
             console.log(`9️⃣ 🔄 RETRY: Retrying WebContainer initialization in ${delay}ms... (attempt ${retryCount + 1}/3)`);
             setTimeout(() => {
               if (mounted) {
@@ -233,6 +241,7 @@ export const useWebContainer = ({ templateData: _templateData }: UseWebContainer
   const writeFileSync = useCallback(
     async (path: string, content: string): Promise<void> => {
       console.group('📝 WebContainer File Write Flow');
+
       console.log('1️⃣ Write Request:', {
         filePath: path,
         contentLength: content.length,
@@ -281,6 +290,7 @@ export const useWebContainer = ({ templateData: _templateData }: UseWebContainer
             recursive: true,
           });
           await instanceRef.current.fs.mkdir(folderPath, { recursive: true }); // Create folder structure recursively
+
           console.log('3️⃣ ✅ SUCCESS: Directory structure created');
         } else {
           console.log('3️⃣ ℹ️ No directory structure needed (root file)');
@@ -292,11 +302,13 @@ export const useWebContainer = ({ templateData: _templateData }: UseWebContainer
           contentPreview: content.substring(0, 100) + (content.length > 100 ? '...' : ''),
         });
         await instanceRef.current.fs.writeFile(sanitizedPath, content);
+
         console.log('5️⃣ ✅ SUCCESS: File written successfully');
         console.groupEnd();
       } catch (err) {
         console.error('❌ ERROR: Failed to write file:', err);
         const errorMessage = err instanceof Error ? err.message : 'Failed to write file';
+
         console.log('5️⃣ ❌ FAILED: File write error', {
           errorMessage: errorMessage,
           originalPath: path,
@@ -311,6 +323,7 @@ export const useWebContainer = ({ templateData: _templateData }: UseWebContainer
 
   const destory = useCallback(() => {
     console.group('🗑️ WebContainer Destroy Flow');
+
     console.log('1️⃣ Destroy Request:', {
       hasInstance: !!instanceRef.current,
       hasServerUrl: !!serverUrl,
@@ -321,6 +334,7 @@ export const useWebContainer = ({ templateData: _templateData }: UseWebContainer
       console.log('2️⃣ 🧹 CLEANUP: Tearing down WebContainer instance');
       try {
         instanceRef.current.teardown();
+
         console.log('2️⃣ ✅ SUCCESS: WebContainer instance torn down');
       } catch (error) {
         console.log('2️⃣ ⚠️ WARNING: Error during teardown (instance may already be torn down):', error);
@@ -352,6 +366,7 @@ export const useWebContainer = ({ templateData: _templateData }: UseWebContainer
 
   const retryInitialization = useCallback(() => {
     console.group('🔄 WebContainer Manual Retry Flow');
+
     console.log('1️⃣ Manual Retry Request:', {
       hasInstance: !!instanceRef.current,
       currentRetryCount: retryCount,
@@ -381,12 +396,14 @@ export const useWebContainer = ({ templateData: _templateData }: UseWebContainer
       console.log('3️⃣ ℹ️ No existing instance to destroy');
     }
     setServerUrl(null);
+
     console.log('4️⃣ ✅ SUCCESS: Manual retry initiated');
     console.groupEnd();
   }, [instanceRef.current, retryCount, error]);
 
   const refreshWebContainer = useCallback(() => {
     console.group('🔄 WebContainer Refresh Flow');
+
     console.log('1️⃣ Refresh Request:', {
       hasInstance: !!instanceRef.current,
       hasGlobalInstance: !!(window as any).__webcontainerInstance,

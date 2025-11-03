@@ -22,20 +22,21 @@ function copyRecursive(src, dest) {
 
 try {
   if (!fs.existsSync(publicDir)) {
-    console.log('Public folder not found; skipping copy');
+    console.error('Public folder not found; skipping copy');
     process.exit(0);
   }
   if (!fs.existsSync(standaloneDir)) {
-    console.log('.next/standalone not found; skipping public copy (non-standalone build)');
+    console.error('.next/standalone not found; skipping public copy (non-standalone build)');
     process.exit(0);
   }
 
-  console.log('Copying public folder to .next/standalone/public ...');
+  console.error('Copying public folder to .next/standalone/public ...');
   if (!fs.existsSync(destPublicDir)) {
     fs.mkdirSync(destPublicDir, { recursive: true });
   }
   copyRecursive(publicDir, destPublicDir);
-  console.log('✅ Public folder copied successfully');
+
+  console.error('✅ Public folder copied successfully');
 } catch (err) {
   console.error('Failed to copy public folder:', err);
   process.exit(1);

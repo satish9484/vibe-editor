@@ -219,6 +219,7 @@ export async function saveTemplateStructureToJson(templatePath: string, outputPa
 
     // Write the JSON file
     const data = await fs.promises.writeFile(outputPath, JSON.stringify(templateStructure, null, 2), 'utf8');
+
     console.log(`Template structure saved to ${outputPath}`);
   } catch (error) {
     throw new Error(`Error saving template structure: ${(error as Error).message}`);

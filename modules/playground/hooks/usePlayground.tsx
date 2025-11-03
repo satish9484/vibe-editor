@@ -1,13 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import type { TemplateFolder } from '../lib/path-to-json';
 import { getPlaygroundById, SaveUpdatedCode } from '../actions';
+import type { TemplateFolder } from '../lib/path-to-json';
 
 interface PlaygroundData {
   id: string;
   title?: string;
-  [key: string]: any;
+  template?: 'REACT' | 'NEXTJS' | 'EXPRESS' | 'VUE' | 'HONO' | 'ANGULAR' | string;
+  templateFiles?: Array<{ content: unknown }>;
 }
 
 interface UsePlaygroundReturn {
@@ -34,9 +35,17 @@ export const usePlayground = (id: string): UsePlaygroundReturn => {
 
       const data = await getPlaygroundById(id);
 
-      //   @ts-ignore
-      setPlaygroundData(data);
+      setPlaygroundData(data as PlaygroundData);
       const rawContent = data?.templateFiles?.[0]?.content;
+
+      const isTemplateFolder = (val: unknown): val is TemplateFolder => {
+        return (
+          !!val &&
+          typeof val === 'object' &&
+          typeof (val as { folderName?: unknown }).folderName === 'string' &&
+          Array.isArray((val as { items?: unknown }).items)
+        );
+      };
 
       if (typeof rawContent === 'string') {
         const parsedContent = JSON.parse(rawContent);
@@ -46,15 +55,22 @@ export const usePlayground = (id: string): UsePlaygroundReturn => {
       }
 
       if (rawContent && typeof rawContent === 'object') {
-        // Prisma Json comes back as an object; use it directly
-        setTemplateData(rawContent as TemplateFolder);
-        toast.success('playground loaded successfully (json content)');
-        return;
+        if (Array.isArray(rawContent)) {
+          setTemplateData({ folderName: 'Root', items: rawContent as unknown as TemplateFolder['items'] });
+          toast.success('playground loaded successfully (json array)');
+          return;
+        }
+        if (isTemplateFolder(rawContent)) {
+          setTemplateData(rawContent);
+          toast.success('playground loaded successfully (json object)');
+          return;
+        }
       }
 
-      //   load template from api if not in saved content
-
-      const res = await fetch(`/api/template/${id}`);
+      //   load template from api if not in saved content (pass template key if available)
+      const templateKey = (data as PlaygroundData)?.template as string | undefined;
+      const query = templateKey ? `?template=${encodeURIComponent(templateKey)}` : '';
+      const res = await fetch(`/api/template/${id}${query}`);
 
       if (!res.ok) throw new Error(`Failed to load template: ${res.status}`);
 

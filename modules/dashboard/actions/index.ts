@@ -81,15 +81,15 @@ export const createPlayground = async (data: {
   template: 'REACT' | 'NEXTJS' | 'EXPRESS' | 'VUE' | 'HONO' | 'ANGULAR';
   description?: string;
 }) => {
-  console.group('🆕 Server: Creating Playground');
-  console.log('1️⃣ Server received data:', data);
+  //console.group('🆕 Server: Creating Playground');
+  // console.log('1️⃣ Server received data:', data);
 
   const user = await currentUser();
-  console.log('2️⃣ User check:', {
-    hasUser: !!user,
-    userId: user?.id,
-    userEmail: user?.email,
-  });
+  // console.log('2️⃣ User check:', {
+  //   hasUser: !!user,
+  //   userId: user?.id,
+  //   userEmail: user?.email,
+  // });
 
   if (!user || !user.id) {
     console.error('3️⃣ ❌ FAILED: No authenticated user');
@@ -97,12 +97,12 @@ export const createPlayground = async (data: {
   }
 
   const { template, title, description } = data;
-  console.log('3️⃣ Processing playground data:', { template, title, description });
+  // console.log('3️⃣ Processing playground data:', { template, title, description });
 
   try {
-    console.log('4️⃣ Creating playground in database...');
+    // console.log('4️⃣ Creating playground in database...');
     const canonicalTemplate = toCanonicalTemplateKey(template) ?? 'REACT';
-    console.log('🧭 Normalized template key:', { input: template, canonicalTemplate });
+    // console.log('🧭 Normalized template key:', { input: template, canonicalTemplate });
     const playground = await db.playground.create({
       data: {
         title: title,
@@ -112,18 +112,18 @@ export const createPlayground = async (data: {
       },
     });
 
-    console.log('5️⃣ ✅ SUCCESS: Playground created:', {
-      id: playground.id,
-      title: playground.title,
-      template: playground.template,
-    });
-    console.log('📝 Playground row written to DB with normalized template.');
+    // console.log('5️⃣ ✅ SUCCESS: Playground created:', {
+    //   id: playground.id,
+    //   title: playground.title,
+    //   template: playground.template,
+    // });
+    // console.log('📝 Playground row written to DB with normalized template.');
     // Seed starter files from vibecode-starters so first load doesn't require runtime scan
     try {
       const startersPath = templatePaths[canonicalTemplate];
       const normalizedStartersPath = startersPath.replace(/^[\\\/]+/, '');
       const inputPath = path.join(process.cwd(), normalizedStartersPath);
-      console.log('📁 Scanning and saving starter tree to templateFiles.content from:', inputPath);
+      // console.log('📁 Scanning and saving starter tree to templateFiles.content from:', inputPath);
       const scanned: TemplateFolder = await scanTemplateDirectory(inputPath);
       const jsonContent: Prisma.InputJsonValue = JSON.parse(JSON.stringify(scanned));
       await db.templateFile.create({
@@ -132,12 +132,12 @@ export const createPlayground = async (data: {
           content: jsonContent,
         },
       });
-      console.log('6️⃣ ✅ Seeded starter template files for playground:', playground.id);
+      // console.log('6️⃣ ✅ Seeded starter template files for playground:', playground.id);
     } catch (seedError) {
       console.error('6️⃣ ❌ Failed to seed starter; writing minimal fallback JSON:', seedError);
       const fallback = getTemplateFallback(canonicalTemplate);
       const jsonFallback: Prisma.InputJsonValue = JSON.parse(JSON.stringify(fallback));
-      console.log('🛟 Seeding fallback template JSON to templateFiles.content');
+      // console.log('🛟 Seeding fallback template JSON to templateFiles.content');
       await db.templateFile.create({
         data: {
           playgroundId: playground.id,
@@ -146,11 +146,11 @@ export const createPlayground = async (data: {
       });
     }
 
-    console.groupEnd();
+    // console.groupEnd();
     return playground;
   } catch (error) {
     console.error('5️⃣ ❌ FAILED: Database error:', error);
-    console.groupEnd();
+    // console.groupEnd();
     throw new Error(`Failed to create playground: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 };
@@ -164,7 +164,7 @@ export const deleteProjectById = async (id: string) => {
     });
     revalidatePath('/dashboard');
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 

@@ -23,42 +23,42 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 const MainPlaygroundPage = () => {
-  console.group('🎮 MainPlaygroundPage Initialization');
-  console.log('1️⃣ Component mounted');
+  // console.group('🎮 MainPlaygroundPage Initialization');
+  // console.log('1️⃣ Component mounted');
 
   const { id } = useParams<{ id: string }>();
-  console.log('2️⃣ URL params:', { id });
+  // console.log('2️⃣ URL params:', { id });
 
   // Use default playground ID if undefined
   const playgroundId = id === 'undefined' ? 'cmgmxwly80001u1z0jbatl1zy' : id;
-  console.log('2️⃣1️⃣ Resolved playground ID:', { originalId: id, resolvedId: playgroundId });
+  // console.log('2️⃣1️⃣ Resolved playground ID:', { originalId: id, resolvedId: playgroundId });
 
   // Redirect to correct URL if using default ID
   useEffect(() => {
     if (id === 'undefined' && typeof window !== 'undefined') {
-      console.log('2️⃣2️⃣ Redirecting to correct URL with default ID');
+      // console.log('2️⃣2️⃣ Redirecting to correct URL with default ID');
       window.history.replaceState(null, '', `/playground/${playgroundId}`);
     }
   }, [id, playgroundId]);
 
   const [isPreviewVisible, setIsPreviewVisible] = useState(true);
-  console.log('3️⃣ Preview visibility state:', { isPreviewVisible });
+  // console.log('3️⃣ Preview visibility state:', { isPreviewVisible });
 
   const { playgroundData, templateData, isLoading, error, saveTemplateData } = usePlayground(playgroundId);
-  console.log('4️⃣ Playground data:', {
-    hasPlaygroundData: !!playgroundData,
-    hasTemplateData: !!templateData,
-    isLoading: isLoading,
-    hasError: !!error,
-    errorMessage: error,
-  });
+  // console.log('4️⃣ Playground data:', {
+  //   hasPlaygroundData: !!playgroundData,
+  //   hasTemplateData: !!templateData,
+  //   isLoading: isLoading,
+  //   hasError: !!error,
+  //   errorMessage: error,
+  // });
 
   const aiSuggestions = useAISuggestions();
-  console.log('5️⃣ AI suggestions:', {
-    isEnabled: aiSuggestions.isEnabled,
-    isLoading: aiSuggestions.isLoading,
-    hasSuggestion: !!aiSuggestions.suggestion,
-  });
+  // console.log('5️⃣ AI suggestions:', {
+  //   isEnabled: aiSuggestions.isEnabled,
+  //   isLoading: aiSuggestions.isLoading,
+  //   hasSuggestion: !!aiSuggestions.suggestion,
+  // });
 
   const {
     setTemplateData,
@@ -80,13 +80,13 @@ const MainPlaygroundPage = () => {
     updateFileContent,
   } = useFileExplorer();
 
-  console.log('6️⃣ File explorer state:', {
-    activeFileId: activeFileId,
-    openFilesCount: openFiles?.length || 0,
-    openFiles: openFiles,
-    hasOpenFiles: !!openFiles,
-    isOpenFilesArray: Array.isArray(openFiles),
-  });
+  // console.log('6️⃣ File explorer state:', {
+  //   activeFileId: activeFileId,
+  //   openFilesCount: openFiles?.length || 0,
+  //   openFiles: openFiles,
+  //   hasOpenFiles: !!openFiles,
+  //   isOpenFilesArray: Array.isArray(openFiles),
+  // });
 
   const {
     serverUrl,
@@ -100,20 +100,20 @@ const MainPlaygroundPage = () => {
     // @ts-expect-error - useWebContainer hook type mismatch
   } = useWebContainer({ templateData });
 
-  console.log('7️⃣ WebContainer state:', {
-    serverUrl: serverUrl,
-    containerLoading: containerLoading,
-    hasContainerError: !!containerError,
-    containerErrorMessage: containerError,
-    hasInstance: !!instance,
-    hasWriteFileSync: !!writeFileSync,
-    retryCount: retryCount,
-    isRetrying: isRetrying,
-    hasRetryInitialization: !!retryInitialization,
-  });
+  // console.log('7️⃣ WebContainer state:', {
+  //   serverUrl: serverUrl,
+  //   containerLoading: containerLoading,
+  //   hasContainerError: !!containerError,
+  //   containerErrorMessage: containerError,
+  //   hasInstance: !!instance,
+  //   hasWriteFileSync: !!writeFileSync,
+  //   retryCount: retryCount,
+  //   isRetrying: isRetrying,
+  //   hasRetryInitialization: !!retryInitialization,
+  // });
 
-  console.log('8️⃣ Component initialization complete');
-  console.groupEnd();
+  // console.log('8️⃣ Component initialization complete');
+  // console.groupEnd();
 
   useEffect(() => {
     setPlaygroundId(playgroundId);
@@ -121,32 +121,32 @@ const MainPlaygroundPage = () => {
 
   useEffect(() => {
     if (templateData && !openFiles.length) {
-      console.group('📁 Template Data Processing');
-      console.log('1️⃣ Template data received:', {
-        hasTemplateData: !!templateData,
-        templateFolderName: templateData.folderName,
-        itemsCount: templateData.items?.length || 0,
-        openFilesCount: openFiles.length,
-      });
+      // console.group('📁 Template Data Processing');
+      // console.log('1️⃣ Template data received:', {
+      //   hasTemplateData: !!templateData,
+      //   templateFolderName: templateData.folderName,
+      //   itemsCount: templateData.items?.length || 0,
+      //   openFilesCount: openFiles.length,
+      // });
 
       setTemplateData(templateData);
 
       // Automatically open the first file
       const firstFile = findFirstFile(templateData);
       if (firstFile) {
-        console.log('2️⃣ Found first file to open:', {
-          filename: firstFile.filename,
-          extension: firstFile.fileExtension,
-          contentLength: firstFile.content?.length || 0,
-        });
+        // console.log('2️⃣ Found first file to open:', {
+        //   filename: firstFile.filename,
+        //   extension: firstFile.fileExtension,
+        //   contentLength: firstFile.content?.length || 0,
+        // });
 
-        console.log('3️⃣ Opening first file automatically');
+        // console.log('3️⃣ Opening first file automatically');
         openFile(firstFile);
-        console.log('4️⃣ ✅ SUCCESS: First file opened');
+        // console.log('4️⃣ ✅ SUCCESS: First file opened');
       } else {
-        console.log('2️⃣ ⚠️ No files found in template data');
+        // console.log('2️⃣ ⚠️ No files found in template data');
       }
-      console.groupEnd();
+      // console.groupEnd();
     }
   }, [templateData, setTemplateData, openFiles.length, openFile]);
 
@@ -256,7 +256,7 @@ const MainPlaygroundPage = () => {
   useEffect(() => {
     if (templateData && instance) {
       // setupContainer will be handled by WebContainerPreview component
-      console.log('Template data and instance available for setup');
+      // console.log('Template data and instance available for setup');
     }
   }, [templateData, instance]);
 
@@ -286,67 +286,67 @@ const MainPlaygroundPage = () => {
     );
   }
 
-  console.group('🔍 Array Operations Check');
-  console.log('9️⃣ Before array operations:', {
-    openFiles: openFiles,
-    openFilesType: typeof openFiles,
-    isArray: Array.isArray(openFiles),
-    activeFileId: activeFileId,
-  });
+  // console.group('🔍 Array Operations Check');
+  // console.log('9️⃣ Before array operations:', {
+  //   openFiles: openFiles,
+  //   openFilesType: typeof openFiles,
+  //   isArray: Array.isArray(openFiles),
+  //   activeFileId: activeFileId,
+  // });
 
   const activeFile = openFiles?.find(file => file.id === activeFileId);
-  console.log('🔟 Active file found:', {
-    activeFile: activeFile,
-    hasActiveFile: !!activeFile,
-    activeFileId: activeFileId,
-    openFilesCount: openFiles?.length || 0,
-  });
+  // console.log('🔟 Active file found:', {
+  //   activeFile: activeFile,
+  //   hasActiveFile: !!activeFile,
+  //   activeFileId: activeFileId,
+  //   openFilesCount: openFiles?.length || 0,
+  // });
 
   const hasUnsavedChanges = openFiles?.some(file => file.hasUnsavedChanges) || false;
-  console.log('1️⃣1️⃣ Unsaved changes check:', { hasUnsavedChanges });
-  console.groupEnd();
+  // console.log('1️⃣1️⃣ Unsaved changes check:', { hasUnsavedChanges });
+  // console.groupEnd();
 
   const handleSaveAll = async () => {
-    console.group('💾 Handle Save All Flow');
-    console.log('1️⃣ Save All Request:', {
-      openFiles: openFiles,
-      openFilesType: typeof openFiles,
-      isArray: Array.isArray(openFiles),
-      openFilesLength: openFiles?.length || 0,
-    });
+    // console.group('💾 Handle Save All Flow');
+    // console.log('1️⃣ Save All Request:', {
+    //   openFiles: openFiles,
+    //   openFilesType: typeof openFiles,
+    //   isArray: Array.isArray(openFiles),
+    //   openFilesLength: openFiles?.length || 0,
+    // });
 
     // Add null check to prevent filter error
     if (!openFiles || !Array.isArray(openFiles)) {
-      console.log('1️⃣ ❌ BLOCKED: No files available to save');
+      // console.log('1️⃣ ❌ BLOCKED: No files available to save');
       toast.error('No files available to save');
-      console.groupEnd();
+      // console.groupEnd();
       return;
     }
 
-    console.log('2️⃣ ✅ PROCEEDING: Filtering unsaved files');
+    // console.log('2️⃣ ✅ PROCEEDING: Filtering unsaved files');
     const unsavedFiles = openFiles.filter(f => f.hasUnsavedChanges);
-    console.log('2️⃣ Filter result:', {
-      unsavedFilesCount: unsavedFiles.length,
-      unsavedFiles: unsavedFiles,
-    });
+    // console.log('2️⃣ Filter result:', {
+    //   unsavedFilesCount: unsavedFiles.length,
+    //   unsavedFiles: unsavedFiles,
+    // });
 
     if (unsavedFiles.length === 0) {
-      console.log('3️⃣ ℹ️ No unsaved changes');
+      // console.log('3️⃣ ℹ️ No unsaved changes');
       toast.info('No unsaved changes');
-      console.groupEnd();
+      // console.groupEnd();
       return;
     }
 
     try {
-      console.log('4️⃣ 💾 Saving all files...');
+      // console.log('4️⃣ 💾 Saving all files...');
       await Promise.all(unsavedFiles.map(f => handleSave(f.id)));
       toast.success(`Saved ${unsavedFiles.length} file(s)`);
-      console.log('4️⃣ ✅ SUCCESS: All files saved');
+      // console.log('4️⃣ ✅ SUCCESS: All files saved');
     } catch {
-      console.log('4️⃣ ❌ FAILED: Some files failed to save');
+      console.error('4️⃣ ❌ FAILED: Some files failed to save');
       toast.error('Failed to save some files');
     }
-    console.groupEnd();
+    // console.groupEnd();
   };
 
   if (error) {

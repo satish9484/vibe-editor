@@ -90,6 +90,7 @@ export function transformToWebContainerFormat(template: { folderName: string; it
 
     try {
       // Log the item structure for debugging
+
       console.log(`Processing root item ${index}:`, {
         filename: item.filename,
         fileExtension: item.fileExtension,

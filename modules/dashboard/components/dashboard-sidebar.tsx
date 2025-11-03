@@ -59,20 +59,20 @@ const lucideIconMap: Record<string, LucideIcon> = {
 export function DashboardSidebar({ initialPlaygroundData }: { initialPlaygroundData?: PlaygroundData[] }) {
   const pathname = usePathname();
 
-  console.group('🎯 DashboardSidebar Component');
-  console.log('1️⃣ DashboardSidebar props:', {
-    initialPlaygroundData: initialPlaygroundData,
-    hasInitialData: !!initialPlaygroundData,
-    isArray: Array.isArray(initialPlaygroundData),
-    dataLength: initialPlaygroundData?.length || 0,
-  });
+  // console.group('🎯 DashboardSidebar Component');
+  // console.log('1️⃣ DashboardSidebar props:', {
+  //   initialPlaygroundData: initialPlaygroundData,
+  //   hasInitialData: !!initialPlaygroundData,
+  //   isArray: Array.isArray(initialPlaygroundData),
+  //   dataLength: initialPlaygroundData?.length || 0,
+  // });
 
   // Add comprehensive null check to prevent filter error
   const safePlaygroundData = initialPlaygroundData || [];
-  console.log('2️⃣ Safe playground data:', {
-    safeData: safePlaygroundData,
-    safeDataLength: safePlaygroundData.length,
-  });
+  // console.log('2️⃣ Safe playground data:', {
+  //   safeData: safePlaygroundData,
+  //   safeDataLength: safePlaygroundData.length,
+  // });
 
   const [starredPlaygrounds, setStarredPlaygrounds] = useState(safePlaygroundData.filter(p => p.starred));
   const [recentPlaygrounds, setRecentPlaygrounds] = useState(safePlaygroundData);

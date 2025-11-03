@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     }
 
     const suggestion = await generateSuggestion(prompt, provider);
-    console.log('suggestion', suggestion);
+    // console.log('suggestion', suggestion);
 
     return NextResponse.json({
       suggestion,
