@@ -25,11 +25,11 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
   const templateKey = toCanonicalTemplateKey(rawTemplate) ?? 'REACT';
   const templatePath = templatePaths[templateKey];
 
-  if (templatePath) {
-    const normalized = templatePath.replace(/^[\\\/]+/, '');
-    const inputPath = path.join(process.cwd(), normalized);
-    console.log('Template path:', inputPath);
-  }
+  // if (templatePath) {
+  //   // const normalized = templatePath.replace(/^[\\\/]+/, '');
+  //   // const inputPath = path.join(process.cwd(), normalized);
+  //   // console.log('Template path:', inputPath);
+  // }
 
   if (!templatePath) {
     const fallback = getTemplateFallback(String(templateKey || 'REACT'));
