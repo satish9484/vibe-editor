@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack --port 3000",
-    "build": "next build && node scripts/copy-public.js",
+    "build": "node -e \"require('fs').rmSync('.next/cache', {recursive: true, force: true})\" 2>/dev/null || true && next build && node scripts/copy-public.js",
     "build:docker": "cross-env DOCKER_BUILD=true npm run build && node scripts/copy-public.js",
     "start": "node .next/standalone/server.js",
     "start:prod": "cross-env NODE_ENV=production node .next/standalone/server.js",

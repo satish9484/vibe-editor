@@ -6,6 +6,10 @@
 
 generator client {
   provider = "prisma-client-js"
+  // Optimize for serverless - exclude binary engines for MongoDB
+  binaryTargets = []
+  // Reduce output size
+  previewFeatures = []
 }
 
 datasource db {

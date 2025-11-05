@@ -46,31 +46,27 @@ try {
     }
   }
 
-  // Handle Vercel/non-standalone builds - copy to .next directory and .next/server
+  // Handle Vercel/non-standalone builds
+  // NOTE: For Vercel, we do NOT copy vibecode-starters to avoid exceeding serverless function size limits
+  // The template API will use fallback templates instead
   if (fs.existsSync(nextDir) && !fs.existsSync(standaloneDir)) {
-    const destStartersDir = path.join(nextDir, 'vibecode-starters');
-    const serverStartersDir = path.join(nextDir, 'server', 'vibecode-starters');
-
-    if (fs.existsSync(startersDir)) {
-      // Copy to .next/vibecode-starters (for general Next.js build)
-      console.error('Copying vibecode-starters to .next/vibecode-starters for Vercel deployment...');
-      if (!fs.existsSync(destStartersDir)) {
-        fs.mkdirSync(destStartersDir, { recursive: true });
-      }
-      copyRecursive(startersDir, destStartersDir);
-      console.error('✅ vibecode-starters copied successfully to .next/vibecode-starters');
-
-      // Also copy to .next/server/vibecode-starters (for Vercel serverless functions)
-      if (fs.existsSync(path.join(nextDir, 'server'))) {
-        console.error('Copying vibecode-starters to .next/server/vibecode-starters for Vercel serverless functions...');
-        if (!fs.existsSync(serverStartersDir)) {
-          fs.mkdirSync(serverStartersDir, { recursive: true });
-        }
-        copyRecursive(startersDir, serverStartersDir);
-        console.error('✅ vibecode-starters copied successfully to .next/server/vibecode-starters');
-      }
+    const isVercel = process.env.VERCEL === '1';
+    if (isVercel) {
+      console.error('Vercel build detected: Skipping vibecode-starters copy to reduce serverless function size');
+      console.error('Template API will use built-in fallback templates');
     } else {
-      console.error('vibecode-starters not found; skipping copy');
+      // Only copy for local/non-Vercel builds
+      const destStartersDir = path.join(nextDir, 'vibecode-starters');
+      if (fs.existsSync(startersDir)) {
+        console.error('Copying vibecode-starters to .next/vibecode-starters for local deployment...');
+        if (!fs.existsSync(destStartersDir)) {
+          fs.mkdirSync(destStartersDir, { recursive: true });
+        }
+        copyRecursive(startersDir, destStartersDir);
+        console.error('✅ vibecode-starters copied successfully to .next/vibecode-starters');
+      } else {
+        console.error('vibecode-starters not found; skipping copy');
+      }
     }
   }
 } catch (err) {

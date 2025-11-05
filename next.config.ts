@@ -4,6 +4,10 @@ const nextConfig: NextConfig = {
   // Only use standalone for Docker/self-hosted deployments
   // For Vercel, leave it commented out so Vercel handles static files natively
   output: process.env.DOCKER_BUILD === 'true' ? 'standalone' : undefined,
+  // Optimize for serverless - reduce build output size
+  swcMinify: true,
+  // Don't include source maps in production (reduces bundle size)
+  productionBrowserSourceMaps: false,
   images: {
     remotePatterns: [
       {

@@ -1,9 +1,13 @@
+# CRITICAL: Exclude Next.js build cache from serverless functions
+.next/cache/
+
 # Exclude vibecode-starters from serverless function bundles
 # These templates are large and should only be used at build time or via CDN
 vibecode-starters/
 
 # Prisma generated files (already in .gitignore, but ensure it's excluded)
-node_modules/.prisma/
+# Note: Prisma client is needed, but we'll optimize it separately
+node_modules/.prisma/client/libquery_engine*
 
 # Docker files (not needed for serverless)
 docker-compose.yml
@@ -24,4 +28,10 @@ docs/
 output/
 dist/
 build/
+
+# Source maps (not needed in production)
+*.map
+
+# TypeScript build info
+*.tsbuildinfo
 

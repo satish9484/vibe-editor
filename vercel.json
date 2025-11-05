@@ -1,0 +1,14 @@
+{
+  "functions": {
+    "app/api/**/*.ts": {
+      "maxDuration": 300,
+      "memory": 1024
+    }
+  },
+  "buildCommand": "npm run build",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD .",
+  "installCommand": "npm install && npx prisma generate",
+  "framework": "nextjs",
+  "outputDirectory": ".next"
+}
+
