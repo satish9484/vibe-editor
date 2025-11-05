@@ -2,11 +2,11 @@
 
 import { db } from '@/lib/db';
 import { getTemplateFallback, templatePaths, toCanonicalTemplateKey } from '@/lib/template';
+import { resolveTemplatePath } from '@/lib/template-path-resolver';
 import { currentUser } from '@/modules/auth/actions';
 import { scanTemplateDirectory, TemplateFolder } from '@/modules/playground/lib/path-to-json';
 import type { Prisma } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
-import path from 'path';
 
 export const toggleStarMarked = async (playgroundId: string, isChecked: boolean) => {
   const user = await currentUser();
@@ -122,7 +122,19 @@ export const createPlayground = async (data: {
     try {
       const startersPath = templatePaths[canonicalTemplate];
       const normalizedStartersPath = startersPath.replace(/^[\\\/]+/, '');
-      const inputPath = path.join(process.cwd(), normalizedStartersPath);
+      // Extract template name from path (e.g., 'vibecode-starters/angular' -> 'angular')
+      // Handle both forward and backward slashes for cross-platform compatibility
+      const templateName =
+        normalizedStartersPath
+          .replace(/^vibecode-starters[\\\/]/, '')
+          .split(/[\\\/]/)
+          .pop() || '';
+      const inputPath = resolveTemplatePath(templateName);
+
+      if (!inputPath) {
+        throw new Error(`Template directory not found: ${templateName}`);
+      }
+
       // console.log('Template path:', inputPath);
       const scanned: TemplateFolder = await scanTemplateDirectory(inputPath);
       const jsonContent: Prisma.InputJsonValue = JSON.parse(JSON.stringify(scanned));

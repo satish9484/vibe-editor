@@ -1,7 +1,7 @@
 import { getTemplateFallback, templatePaths, toCanonicalTemplateKey } from '@/lib/template';
+import { resolveTemplatePath } from '@/lib/template-path-resolver';
 import { scanTemplateDirectory, TemplateFolder } from '@/modules/playground/lib/path-to-json';
 import { NextRequest } from 'next/server';
-import path from 'path';
 
 // Runtime configuration
 export const runtime = 'nodejs';
@@ -38,7 +38,19 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
   try {
     const normalized = templatePath.replace(/^[\\\/]+/, '');
-    const inputPath = path.join(process.cwd(), normalized);
+    // Extract template name from path (e.g., 'vibecode-starters/angular' -> 'angular')
+    // Handle both forward and backward slashes for cross-platform compatibility
+    const templateName =
+      normalized
+        .replace(/^vibecode-starters[\\\/]/, '')
+        .split(/[\\\/]/)
+        .pop() || '';
+    const inputPath = resolveTemplatePath(templateName);
+
+    if (!inputPath) {
+      throw new Error(`Template directory not found: ${templateName}`);
+    }
+
     const scanned: TemplateFolder = await scanTemplateDirectory(inputPath);
 
     if (!validateJsonStructure(scanned.items)) {
