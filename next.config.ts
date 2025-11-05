@@ -56,6 +56,21 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   } as NextConfig['experimental'],
+  webpack: (config, { isServer }) => {
+    // Exclude large dependencies from serverless function bundles
+    if (isServer) {
+      // Ensure Monaco Editor and WebContainer are not bundled in serverless functions
+      // These are client-only and should be loaded dynamically
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@monaco-editor/react': false,
+        '@webcontainer/api': false,
+        'monaco-editor': false,
+      };
+    }
+
+    return config;
+  },
 };
 
 export default nextConfig;

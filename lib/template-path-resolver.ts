@@ -11,7 +11,7 @@ import * as path from 'path';
 export function resolveTemplatePath(relativeTemplatePath: string): string | null {
   // Normalize the path (remove leading slashes)
   const normalizedPath = relativeTemplatePath.replace(/^[\\\/]+/, '');
-  
+
   // List of possible base locations to check
   const possibleBases = [
     // 1. Project root (local development)
@@ -27,7 +27,7 @@ export function resolveTemplatePath(relativeTemplatePath: string): string | null
   // Check each possible location
   for (const base of possibleBases) {
     const fullPath = path.join(base, 'vibecode-starters', normalizedPath);
-    
+
     try {
       // Check if directory exists and is accessible
       const stats = fs.statSync(fullPath);
@@ -36,6 +36,7 @@ export function resolveTemplatePath(relativeTemplatePath: string): string | null
       }
     } catch (error) {
       // Directory doesn't exist at this location, continue checking
+      console.warn('Directory does not exist at this location, continue checking', error);
       continue;
     }
   }

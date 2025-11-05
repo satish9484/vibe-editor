@@ -1,0 +1,27 @@
+# Exclude vibecode-starters from serverless function bundles
+# These templates are large and should only be used at build time or via CDN
+vibecode-starters/
+
+# Prisma generated files (already in .gitignore, but ensure it's excluded)
+node_modules/.prisma/
+
+# Docker files (not needed for serverless)
+docker-compose.yml
+Dockerfile
+docker-scripts.sh
+
+# Development and testing files
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+coverage/
+
+# Documentation (not needed in production)
+docs/
+
+# Build artifacts
+output/
+dist/
+build/
+

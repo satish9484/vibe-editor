@@ -48,7 +48,10 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const inputPath = resolveTemplatePath(templateName);
 
     if (!inputPath) {
-      throw new Error(`Template directory not found: ${templateName}`);
+      // Template directory not found - use fallback
+      console.warn(`Template directory not found: ${templateName}, using fallback`);
+      const fallback = getTemplateFallback(String(templateKey || 'REACT'));
+      return Response.json({ success: true, templateJson: fallback, fallback: true }, { status: 200 });
     }
 
     const scanned: TemplateFolder = await scanTemplateDirectory(inputPath);
@@ -60,7 +63,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
     return Response.json({ success: true, templateJson: scanned }, { status: 200 });
   } catch (error) {
-    console.error('❌ Template scan failed, using fallback:', error);
+    // On Vercel, vibecode-starters may not be available - gracefully fall back to template fallbacks
+    console.error('❌ Template scan failed, using fallback:', error instanceof Error ? error.message : String(error));
     const fallback = getTemplateFallback(String(templateKey || 'REACT'));
     return Response.json({ success: true, templateJson: fallback, fallback: true }, { status: 200 });
   }
